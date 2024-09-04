@@ -1,0 +1,538 @@
+/*Admin - Main*/
+
+:root {
+	--color-primary:#0073AA;
+	--color-cancel:#aa0022;
+	--color-accent:#27CC87;
+	--color-white:#fff;
+	--color-black:000;
+	--color-header:#383A46;
+	--color-nav:#262932;
+	--color-body-text:#3C3B59;
+	--color-desc-text:#6E6D99;
+	--color-panel-heading:#708AA4;
+	--color-secondary-hover:rgba(0, 115, 170, .15);
+	--color-secondary-focus:rgba(0, 115, 170, .4);
+	--color-divider:#CAD8EC;
+	--color-divider-light:rgba(202, 216, 236, .5);
+	--color-progress-bg:#57645E;
+	--color-modal-background:rgba(47, 58, 74, .8);
+	--spacer-xs:8px;
+	--spacer-sm:16px;
+	--spacer-md:24px;
+	--spacer-lg:32px;
+	--spacer-xl:40px;
+	--spacer-2xl:48px;
+	--spacer-3xl:56px;
+	--spacer-4xl:64px;
+	--spacer-5xl:72px;
+	--spacer-6xl:80px;
+	--panel-border-radius:6px;
+	--panel-shadow:0px 2px 1px rgba(39, 45, 77, 0.05),0px 2px 8px rgba(187, 187, 187, 0.20);
+	--input-shadow:0px 2px 2px rgba(182, 181, 204, 0.25)
+  }
+
+.msrm-panel {
+	background:var(--color-white);
+	box-shadow:var(--panel-shadow);
+	border-radius:var(--panel-border-radius);
+  
+  }
+  
+ .mspbar{ 
+	
+	background: #fff;
+	position: relative;
+	
+	margin: 0 auto;
+	border-radius: 8px;
+   
+  }
+
+.wp-upload-cont-opt {
+
+	
+	width: 100%;
+	text-align: center;
+	padding: 10px;
+	margin: 10px 0px 10px 0px;
+}
+
+.wp-upload-opt {
+
+	display: inline-block;
+	width: 90%;
+	min-height: 120px;
+	vertical-align: middle;
+	margin: 5px 5px 5px 5px;
+	padding: 15px;
+	max-width: 1100px;
+
+  }
+
+.wpmpg-welcome-panel {
+    position: relative;
+    display: inline-block;
+    width: 99%;   
+    padding: 15px 0px 15px 10px;
+    background:rgb(245, 245, 245);
+
+}
+
+.msrm-imp-options{
+	display: inline-block;
+	width: 100%;
+	display: none;
+
+}
+
+.msrm-btnupload-options{
+	position: relative;
+	z-index: 1;
+	width: 200px;
+
+	font-size: 18px;
+	padding: 10px;
+  }
+
+  .msrm-options-not-selected{
+	background: none !important;
+	
+  }
+
+  .msm-btn-steps-bar{
+	display: none;
+	width: 90%;
+	min-height: 120px;
+	vertical-align: middle;
+	margin: 5px 5px 5px 5px;
+	padding: 15px;
+  }
+
+  .msm-btn-steps-bar-steps{
+	
+	width: 90%;
+	min-height: 120px;
+	vertical-align: middle;
+	margin: 5px 5px 5px 5px;
+	padding: 15px;
+  }
+
+  .ui-progressbar{ 
+  
+	border: none !important; 
+  }
+  
+  .ui-progressbar-value{ 
+	background:#43b8f378 !important;
+	border: none; 
+  }
+  
+  .wpm-hide_body-table{
+	display: none;	
+  }
+
+  .wpm-processed-row{
+	background-color: #d5ffd2 !important;	
+  }
+
+
+
+ .wpm-import-opt-bar{
+
+	padding: 20px 10px 10px 10px;
+    margin: 20px 0px 10px 0px;
+    background: #f9f9f9;
+    border: solid 1px #ddd;
+    border-radius: 8px;
+    position: relative;
+	
+  }
+
+  .wpm-import-results-block{
+
+	padding: 10px 10px 10px 10px;
+    margin: 10px 0px 10px 0px;
+    background: #f9f9f9;
+    border: solid 1px #ddd;
+    border-radius: 8px;
+    position: relative;
+	display: none;
+	
+  }
+
+  .wpm-import-results-block .wpm-import-opt-bar-msg{
+
+	padding: 5px 10px 5px 10px;
+    text-align: center;
+    margin: 0px;
+
+	
+  }
+
+  .sucess-check{
+	font-size: 38px;
+    color: #16b011;
+  }
+
+  .wpmpg-ultra-info, .wpmpg-ultra-success, .wpmpg-ultra-warning, .wpmpg-ultra-error, .isa_error {
+
+    border:none;
+
+    margin: 10px 0px 15px 5px;
+
+    padding:15px 10px 15px 50px;
+
+    background-repeat: no-repeat;
+
+    background-position: 10px center;
+
+	-moz-border-radius:.5em;
+
+-webkit-border-radius:.5em;
+
+border-radius:.5em;
+
+}
+
+
+
+.wpmpg-ultra-warning {
+
+    color: #9F6000;
+
+    background-color: #FEEFB3;
+
+
+}
+
+.wpmpg-ultra-error {
+
+    color: #D8000C;
+
+    background-color: #FFBABA;
+
+
+}
+
+.wpmpg-ultra-wait {
+    color: #333;
+    background-color:none;
+	text-align:center
+   
+}
+.wpmpg-ultra-info {
+    color: #777;
+    background-color: #e9f5fbf0;
+   
+}
+.wpmpg-ultra-success {
+    color: #4F8A10;
+    background-color: #DFF2BF;
+   
+}
+
+.wpmpg-ultra-success i{
+	font-size:18px;
+	margin:0px 5px 0px 0px
+   
+}
+
+.wpmpg-sect{
+	padding: 10px;
+}
+
+.wpmpg-ultra-info i{
+	font-size:18px;
+	margin:0px 5px 0px 0px
+   
+}
+.wpmpg-ultra-warning {
+    color: #666;
+    background-color: #ffcc002b;
+   
+}
+
+.wpmpg-ultra-warning i{
+	font-size:18px;
+	margin:0px 5px 0px 0px
+   
+}
+
+.wpmpg-ultra-error {
+    color: #D8000C;
+    background-color: #FFBABA;
+   
+}
+
+ 
+
+  .wpm-progress-bar{
+
+	padding: 20px 10px 10px 10px;
+    margin: 20px 0px 10px 0px;
+    background: #f9f9f9;
+    border: solid 1px #ddd;
+    border-radius: 8px;
+    position: relative;
+	display: none;
+  }
+
+  .mspg-tbl-cont{
+	overflow-x: auto;
+	overflow-y: auto;
+	min-height: 300px;
+	max-height: 300px;
+	padding: 10px;
+  }
+
+.gestclok-conf-message-details .nuva-check-ico-div i {
+    font-size: 2.8rem;
+	color: green;
+}
+
+  .file_url{
+	width: 400px;
+  }
+
+.mpg-download-link-btn{
+	padding: 10px;
+}
+  .wpmpg-field-tbl{
+	text-align: left;
+	font-weight: bold;
+	width: 20%;
+  }
+
+  .wpmpg-field-tbl-val{
+	text-align: left;
+	
+  }
+
+.mspg-tbl-table{
+	margin: 10px 0px 10px 0px;
+}
+
+
+
+
+.msrm-imp-options .msrm-imp-options-sel{
+	display: inline-block;
+	width: 80%;
+	border: solid 1px #d5d5d5;
+	min-height: 100px;
+	background: #f7f7f7;
+	padding: 10px;
+	border-radius: 8px;
+	margin: 2px;
+	text-align: left;
+	vertical-align: middle;
+	cursor: pointer;
+	text-align: center;
+
+}
+
+
+.wpmpg-welcome-panel table{
+    
+
+}
+
+.wpmpg-welcome-panel table i{
+	font-size: 18px;
+    
+
+}
+
+.getbwp-button-bart{
+	text-align: right;
+	padding: 20px;
+}
+
+
+.wpmpg-colval{
+	width: 20%;
+}
+
+.wpmpg-main-sales-summary { text-align:center; width: 98%; position: relative; }
+.wpmpg-main-sales-summary p.bupquickappbtn{ text-align:right; color:#666 }
+.wpmpg-main-sales-summary p.bupquickappbtn a{ color:#666; text-decoration:none }
+
+.wpmpg-main-sales-summary a span{ margin-right:5px; }
+
+.wpmpg-main-sales-summary ul{ padding: 10px 5px 10px 5px;
+    background: #f0f0f0;
+    margin: 10px 0px 10px 0px;}
+
+.wpmpg-main-sales-summary ul li{
+		display: inline-block;
+		min-height: 115px;
+		margin: 0px 0px 0px 5px;
+		background: #FFFFFF;
+		border: none;
+		vertical-align: top;
+		width: 19%;
+		padding: 5px 0 15px 0px; 
+        border-radius:8px}
+.wpmpg-main-sales-summary ul li a{ display:block; width:100%; height:100%; text-decoration:none }
+.wpmpg-main-sales-summary  ul li p{ 
+    font-size:3rem; 
+    margin:0px; 
+    font-weight:700;
+    text-align:center 
+}
+.wpmpg-main-sales-summary ul li small{ font-size:1.2rem; color:#999 }
+
+
+
+/* Large screens */
+
+@media only screen and (min-width : 1680px) {
+
+
+
+}
+
+
+
+/* Tablet Landscape */
+
+ @media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : landscape) {
+
+
+
+}
+
+
+
+
+
+
+
+/* for 980px or less */
+
+@media screen and (max-width: 1000px) {
+	
+
+}
+
+
+/* Smaller than 960px */
+
+/*@media only screen and (max-width: 959px) {
+
+}*/
+
+
+
+/* MAX 800px */
+
+
+
+@media only screen and (max-width: 1000px) {
+	
+	.wpmpg-user-dahsboard-cont .wpmpg-top-header .wpmpg-top-options ul li .wpmpg-user-menu-text{ display:none}
+	.bp_table_row_hide{ display:none}	
+	.wpmpg-user-dahsboard-cont .wpmpg-top-header .wpmpg-top-options ul li i{ font-size:25px}
+	
+	#wpmpg-stats-on-hold{ display:none}
+	#wpmpg-stats-shared{ display:none}	
+	.wpmpg-main-ticket-summary ul li { width:23%}
+	.wpmpg-main-ticket-summary ul li.ultimatecaptchaclientd{width:30%  }
+	
+	
+	/* tickets list*/
+	#wpmpg-ticket-col-staff { display:none}
+	#wpmpg-ticket-col-department { display:none}
+	
+	
+}
+
+
+
+/* for 750px or less */
+
+@media only screen and (max-width: 750px) {
+	
+
+}
+
+@media only screen and (max-width: 620px) {
+	
+	
+	.wpmpg-main-ticket-summary ul li { width:22%}
+	#wpmpg-ticket-col-lastupdate { display:none}
+	
+	
+
+
+}
+
+/*  GO FULL WIDTH AT LESS THAN 580 PIXELS */
+
+@media only screen and (max-width: 580px) {
+	
+
+
+}
+
+
+@media only screen and (max-width: 460px) {
+	
+	
+	.wpmpg-staff-profile-name { display:none}
+	#wpmpg-ticket-col-status { display:none}
+	#wpmpg-ticket-col-site { display:none}
+	
+
+}
+
+
+/*  GO FULL WIDTH AT LESS THAN 480 PIXELS */
+
+@media only screen and (max-width: 480px) {
+	
+
+
+
+}
+
+
+
+/* MAX 1440px */
+
+
+
+@media only screen and (max-width: 1440px){
+
+
+
+
+}
+
+
+
+
+
+/* MAX 1024px */
+
+
+
+@media only screen and (max-width: 1024px){
+
+
+
+}
+
+
+/* MAX 360px */
+
+
+
+@media only screen and (max-width: 320px){
+
+
+		
+
+}
+
