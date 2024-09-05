@@ -2,9 +2,10 @@
 /*
 Plugin Name: Mosaic Page Generator
 Description: Plugin to Import Custom Post Type Pages.
-Version: 1.1.6
+Version: 1.1.7
 Author: Nickolas
 */
+
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
