@@ -7,6 +7,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $wpmpg_default_options;	
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
+	var $mVersion = '1.0.8';
 	public $allowed_html;
 
 	var $tblHeaders;	
@@ -1145,7 +1146,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	   wp_enqueue_script('wpmpg_front_uploader');
 
 	   wp_register_script( 'wpmpg_admin', wpmpg_url.'admin/scripts/admin.js', array( 
-		'jquery','jquery-ui-core', 'jquery-ui-progressbar'), '1.0.7' );
+		'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion );
 	   wp_enqueue_script( 'wpmpg_admin' );		  
    }      
 

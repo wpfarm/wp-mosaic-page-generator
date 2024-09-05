@@ -2,7 +2,7 @@
 /*
 Plugin Name: Mosaic Page Generator
 Description: Plugin to Import Custom Post Type Pages.
-Version: 1.1.5
+Version: 1.1.6
 Author: Nickolas
 */
 

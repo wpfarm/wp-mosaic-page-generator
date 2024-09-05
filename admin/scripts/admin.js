@@ -15,10 +15,9 @@ jQuery(document).ready(function($) {
                  
     }); 
     
-    $(document).on("click", "#wmp-btn-submit", function() {      
+    $(document).on("click", "#wmp-btn-submit", function() {     
                   
-        $("#wmp-form").submit();     
-          
+        $("#wmp-form").submit();               
     });
 
     $(document).on("click", "#wmp-btn-start-import-submit", function() {  
@@ -65,13 +64,7 @@ jQuery(document).ready(function($) {
             }); 
         }
         e.preventDefault();         
-    });
-
-
-    
-
-
-   
+    });   
 
     $(document).on("click", "#wpmsaic-download-from-url-btn", function() {   
         
@@ -126,7 +119,6 @@ function ms_build_links_array (){
         }
     });
 
-
     
     $("#wpm-import-opt-bar").hide();  
 
@@ -160,13 +152,12 @@ function ms_build_links_array (){
                     $("#last_row").val(from_row);
 
                     var processed_rows_flag =  parseFloat($("#last_row").val() ) +  parseFloat($("#batch").val());
-
+                    
                     if(  processed_rows_flag > parseFloat(total_rows)){
-                        console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
-                        clearInterval(loop) ;
-
-                        $("#msm-btn-steps-bar-steps").hide(); 
-                        $("#wpm-import-results-block").show();                       
+                      //  console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
+                       // clearInterval(loop) ;
+                        //$("#msm-btn-steps-bar-steps").hide(); 
+                        //$("#wpm-import-results-block").show();                    
 
 
                     }
@@ -175,7 +166,20 @@ function ms_build_links_array (){
                     $("#msrm-process-val").html(total_p);                   
                     mark_as_processed(total_p);                  
                     var percent_a = res.percent_a;
-                    progressbar.progressbar( "value",  percent_a );                    
+                    progressbar.progressbar( "value",  percent_a );   
+
+                    if(  percent_a >= 100){
+                        console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
+                        clearInterval(loop) ;
+                        $("#msm-btn-steps-bar-steps").hide(); 
+                        $("#wpm-import-results-block").show();                    
+
+
+                    }
+                    
+                    
+
+
                       
                   }
         });       
