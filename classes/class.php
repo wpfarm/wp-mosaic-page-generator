@@ -36,7 +36,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
     }	
 
-
 	function post_add_meta_box(){	
 		
 		add_meta_box('wpmosaic_customfields_data', 'WP Mosaic Custom Fields', array($this, 'getPostMetaFields'), null,  'advanced' ,  'high');
@@ -268,7 +267,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$rowsDOrigin = $this->tblRows;	
 		$rowsCombined = $this->tblCombinedRows;		
 
-		$only_metas = array_slice($headers, 4, count($headers), false); 
+		$only_metas = array_slice($headers, 3, count($headers), false); 
 
 		$batch_from = $_POST['batch'] ?? 1;
 		$last_row = $_POST['last'] ?? 0;				
@@ -300,14 +299,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$rowCount =1;
 
 		$rowsDATA = $rowsDATASliced;			
-		foreach ( $rowsDATA  as $data ) {		
-			
+		foreach ( $rowsDATA  as $data ) {					
 			$post_type = $wp_custom_post_type;
-			$post_id = $rowsDATA[$count][0];
-			$post_title = $rowsDATA[$count][1];
-			$post_slug = $rowsDATA[$count][2];
+			$post_title = $rowsDATA[$count][0];
+			$post_slug = $rowsDATA[$count][1];
 			//$post_desc = $rowsDATA[$count][3];	
-			$meta_desc = $rowsDATA[$count][3];
+			$meta_desc = $rowsDATA[$count][2];
 			$post_desc ='';		
 			$post_excerpt = '';		
 			
@@ -333,85 +330,84 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$post_exists = $this->the_slug_exists($post_slug, $post_type);	
 
 			if(!$post_exists){
-
-				$update_post = false;
 				// Insert the post into the database
+				$update_post = false;
 				$post_id = wp_insert_post( $my_post );	
-						
-				update_post_meta( $post_id, '_yoast_wpseo_title',$post_title );
-				update_post_meta( $post_id, '_yoast_wpseo_metadesc',$meta_desc );
-				update_post_meta( $post_id, '_yoast_wpseo_focuskw',$post_title );
-				update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );
-				update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
-		
-				$i = 4;			
-				foreach ( $only_metas  as $meta_key ) {
-					$val_import = $rowsDATA[$count][$i] ?? '';
-					if(isset( $fields_type_col[$meta_key])) { //if there is a custom field for this post type
-
-						$custom_field = $fields_type_col[$meta_key];
-
-						if($custom_field['cpf_field_type']==1){ //text
-
-							update_post_meta( $post_id, $meta_key,$val_import );
-
-						}else{ //image		
-							
-							$img_val = '<img src="'.$val_import.'">';
-							update_post_meta( $post_id, $meta_key,$img_val );
-
-							$meta_alternative_text= $meta_key.'_alternative_text';
-							$meta_title= $meta_key.'_title';
-							$meta_slug= $meta_key.'_slug';
-							$meta_description= $meta_key.'_description';
-
-							$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
-							$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
-							$meta_title = $rowsCombined[$count][$meta_title] ?? '';
-							$meta_description = $rowsCombined[$count][$meta_description] ?? '';						
-
-							$img_path = $this->download_from_url($val_import, $meta_slug);
-
-
-
-							$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
-							set_post_thumbnail( $post_id, $attach_id );
-
-							// Set the image Alt-Text
-							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
-							$my_image_meta = array(
-								'ID'		=> $attach_id,			// Specify the image (ID) to be updated
-								'post_title'	=> $meta_title,		// Set image Title to sanitized title
-								'post_excerpt'	=> $meta_text,		// Set image Caption (Excerpt) to sanitized title
-								'post_content'	=> $meta_description, // Set image Description (Content) to sanitized title
-							);
-
-							// Set the image meta (e.g. Title, Excerpt, Content)
-							wp_update_post( $my_image_meta );
-
-						}				
-					
-					}				
-					
-					$i++;
-				}	
 
 			}else{
-
-				//$post_id = $post_exists[0]->ID;
-				//$update_post = true;
-				/*$my_post = array(
+				$post = $this->get_post_id_by_slug($post_slug, $post_type);
+				$post_id = $post[0]->ID;
+				$update_post = true;
+				$my_post = array(
 					'ID'		=> $post_id,	
 					'post_title'    => $post_title,
 					'post_content'  => $post_desc,
 					'post_excerpt'  => $post_excerpt					
 				
 				);
-				//wp_update_post( $my_post ); */
+				wp_update_post( $my_post ); 
+			}					
+						
+			update_post_meta( $post_id, '_yoast_wpseo_title',$post_title );
+			update_post_meta( $post_id, '_yoast_wpseo_metadesc',$meta_desc );
+			update_post_meta( $post_id, '_yoast_wpseo_focuskw',$post_title );
+			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );
+			update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
+		
+			$i = 3;			
+			foreach ( $only_metas  as $meta_key ) {
+				$val_import = $rowsDATA[$count][$i] ?? '';
+				if(isset( $fields_type_col[$meta_key])) { //if there is a custom field for this post type
 
-		    }	//enif if post exists
+					$custom_field = $fields_type_col[$meta_key];
+					if($custom_field['cpf_field_type']==1){ //text
+
+						update_post_meta( $post_id, $meta_key,$val_import );
+
+					}else{ //image		
+							
+						$img_val = '<img src="'.$val_import.'">';
+						update_post_meta( $post_id, $meta_key,$img_val );
+
+						$meta_alternative_text= $meta_key.'_alternative_text';
+						$meta_title= $meta_key.'_title';
+						$meta_slug= $meta_key.'_slug';
+						$meta_description= $meta_key.'_description';
+
+						$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
+						$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
+						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
+						$meta_description = $rowsCombined[$count][$meta_description] ?? '';	
+						
+						//check if image already exists
+
+						$img_path = $this->download_from_url($val_import, $meta_slug);
+						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
+						
+						if($attach_id!=''){
+							// Set the image Alt-Text
+							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
+							$my_image_meta = array(
+									'ID'		=> $attach_id,			// Specify the image (ID) to be updated
+									'post_title'	=> $meta_title,		// Set image Title to sanitized title
+									'post_excerpt'	=> $meta_text,		// Set image Caption (Excerpt) to sanitized title
+									'post_content'	=> $meta_description, // Set image Description (Content) to sanitized title
+								);
+
+							// Set the image meta (e.g. Title, Excerpt, Content)
+							wp_update_post( $my_image_meta );
+						}					
+
+					}				
+					
+				}				
+					
+				$i++;
+		    }	//end foreach
 			$count++;
-	    }	
+
+
+	    }	// end for each data
 
 		$response = array('status' => $status_process, 
 						  'last' => $last_row, 
@@ -428,6 +424,31 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		
 		
 	
+	}
+
+	function attach_image_to_project($file_path, $file_name, $post_id  , $user_id){
+		$mime_type = wp_get_image_mime($file_path);
+		$attachment = array(
+			'post_parent' =>$post_id,
+			'post_author' =>$user_id,
+			'post_mime_type' => $mime_type,
+			'post_title' => $file_name,
+			'post_content' => '',
+			'post_status' => 'inherit'
+		);	
+
+		if ( has_post_thumbnail( $post_id ) ) {
+			$attach_id = get_post_thumbnail_id( $post_id );
+
+		 }else{
+			$attach_id = wp_insert_attachment( $attachment, $file_path );
+
+		 }
+			
+		$attach_data = wp_generate_attachment_metadata( $attach_id, $file_path );
+		wp_update_attachment_metadata( $attach_id, $attach_data );	
+		set_post_thumbnail( $post_id, $attach_id );	
+		return $attach_id;
 	}
 
 	function the_slug_exists($post_name, $post_type) {
@@ -448,25 +469,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 	
 
-	function attach_image_to_project($file_path, $file_name, $post_id  , $user_id){
-
-		$mime_type = wp_get_image_mime($file_path);
-		$attachment = array(
-			'post_parent' =>$post_id,
-			'post_author' =>$user_id,
-			'post_mime_type' => $mime_type,
-			'post_title' => $file_name,
-			'post_content' => '',
-			'post_status' => 'inherit'
-		);
-		
-		$attach_id = wp_insert_attachment( $attachment, $file_path );				  
-		$attach_data = wp_generate_attachment_metadata( $attach_id, $file_path );
-		wp_update_attachment_metadata( $attach_id, $attach_data );	
-
-		return $attach_id;
-		
-	}
+	
 
 	public function build_data_table($file){
 		global $wpdb;		
