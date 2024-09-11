@@ -15,7 +15,6 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 ?>
 
 <div class="wpmpg-welcome-panel">
-        <h1 class="wpquotecalc-extended">WP Mosaic Page Generator</h1>
               
 		<form method="post" id="wmp-form">		
 
@@ -33,44 +32,48 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
                 <div class="msrm-panel wp-upload-opt">
 
                         <?php echo $wpmpg->get_uploader_section();?>  
-                        
+                    
+                    <div class="row in">
+                        <div class="col col-9 info">
                         <div class="msrm-imp-options" id="msrm-imp-options">
-
                             <div class="msrm-imp-options-sel wpm-upload-imp-op-bx" selected-opt="act_opt_create" id="act_opt_create_box">
-							    <p>  <?php _e('SELECT POST TYPE', 'wp-mosaic-page-generator'); ?> </p>
-								<p> <?php echo $wpmpg->get_all_c_postypes_list_box('wp-custom-post-type');?>  </p>
+							    <div class="label"><?php _e('Select post type', 'wp-mosaic-page-generator'); ?></div>
+								<div class="field"><?php echo $wpmpg->get_all_c_postypes_list_box('wp-custom-post-type');?></div>
 
                             </div>
-
-                                                  
-
+                        </div>
                         </div>
 
-						<div class=" msm-btn-steps-bar" id="msm-btn-steps-bar"  >
-
-							<button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-submit"><span><i class="fa fa-arrow-right"></i></span> <?php _e('NEXT STEP', 'wp-mosaic-page-generator'); ?>	</button>
-
-						</div>
-                
-                </div>		
-
-                
-
+                        <div class="col col-3 btm click">
+                            <div class="msm-btn-steps-bar" id="msm-btn-steps-bar">
+                                <button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-submit"> <?php _e('Next', 'wp-mosaic-page-generator'); ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+                <div class="row item">
+                    <div class="col col-9 info mid">
+                        <div class="row label">Custom Post Types</div>
+                        <div class="row description">Here you can manage your custom post types.</div>
+                    </div>
+                    <div class="col col-3 click">
+                        <a class="outline" href="<?php echo site_url('/wp-admin/admin.php?page=wpmpg&tab=cpt');?>"><img src="<?php echo plugins_url( 'images/icon-settings.svg', dirname( __FILE__ ) ); ?>"></a>
+                    </div>
+                </div>
 
 				<?php
 				}elseif($step==2 && $is_submited==1){ //file submited 
 				?>
 
 
-					<div class="msrm-panel wp-upload-opt">				   
+					<div class="msrm-panel wp-upload-opt">	
 
 						<?php echo $wpmpg->build_data_table($_POST['file_uploaded']); ?> 	
 						
-						<div class=" msm-btn-steps-bar-steps" id="msm-btn-steps-bar-steps"  >
-							<button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-back-to-step1"><span><i class="fa fa-arrow-left"></i></span> <?php _e('BACK TO STEP 1', 'wp-mosaic-page-generator'); ?>	</button>
-							<button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-start-import-submit"><span><i class="fa fa-arrow-right"></i></span> <?php _e('CLICK TO START', 'wp-mosaic-page-generator'); ?>	</button>
 
-						</div>
 					</div>	
 					
 					
@@ -129,7 +132,7 @@ var uploader = new plupload.Uploader({
 	filters : {
 		max_file_size : '20mb',
 		mime_types: [
-			{title : "Image files", extensions : "png,jpg,csv"}
+			{title : "Image files", extensions : "png,webp,jpg,csv"}
 		]
 	},
 

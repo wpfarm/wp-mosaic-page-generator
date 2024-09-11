@@ -97,7 +97,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$upload_dir = wp_upload_dir(); 
 		$path_pics =   $upload_dir['basedir'];		
 					
-		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' || $ext == 'csv'){
+		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'webp' || $ext == 'gif' || $ext == 'csv'){
 				
 				if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
 					wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
@@ -139,7 +139,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$upload_dir = wp_upload_dir(); 
 		$path_pics =   $upload_dir['basedir'];		
 					
-		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'gif' ){
+		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'webp' || $ext == 'gif' ){
 				
 			if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
 				wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
@@ -303,8 +303,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$post_type = $wp_custom_post_type;
 			$post_title = $rowsDATA[$count][0];
 			$post_slug = $rowsDATA[$count][1];
-			//$post_desc = $rowsDATA[$count][3];	
-			$meta_desc = $rowsDATA[$count][2];
+ 			$rank_math_title = $rowsDATA[$count][2];            
+			$meta_desc = $rowsDATA[$count][3];   
+			$keyword = $rowsDATA[$count][4];   
 			$post_desc ='';		
 			$post_excerpt = '';		
 			
@@ -352,7 +353,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc',$meta_desc );
 			update_post_meta( $post_id, '_yoast_wpseo_focuskw',$post_title );
 			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );
+            
+			update_post_meta( $post_id, 'rank_math_title',$rank_math_title );            
 			update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
+			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
 		
 			$i = 3;			
 			foreach ( $only_metas  as $meta_key ) {
@@ -366,7 +370,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 					}else{ //image		
 							
-						$img_val = '<img src="'.$val_import.'">';
+ $meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
+
+// Update this line to include the alt attribute
+$img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.$val_import.'">';                       
+                        
+	
 						update_post_meta( $post_id, $meta_key,$img_val );
 
 						$meta_alternative_text= $meta_key.'_alternative_text';
@@ -485,11 +494,29 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		$html = ' <div class="msm-btn-steps-bar-steps"  >';
 
-		$html = ' <div class="mspg-tbl-cont-header"  >';
-			$html .='<h1><span>'.count($rowsDATA).'</span>'.__(' rows will be imported','image-notes-plus-WP'). '</h1>';
-		$html .='</div>';
+		$html = ' 
+        
+        <div class="row item first uploader">
+        <div class="col col-9 info mid">
+        <div class="row label">'.count($rowsDATA).' posts will be imported</div>
+        <div class="row description">Press start to begin the import process</div>
+        </div>
+        <div class="col col-3 click">
+            <div class=" msm-btn-steps-bar-steps" id="msm-btn-steps-bar-steps"  >
+                <button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-start-import-submit">Start Import</button>
+            </div>   
+        </div>
+        </div>
+        
+       ';
 
-		$html .= ' <div class="mspg-tbl-cont msrm-panel" id="mspg-tbl-cont"  >';
+        
+        
+        
+        
+
+
+		$html .= ' <div class="row items mspg-tbl-cont msrm-panel" id="mspg-tbl-cont"  >';
 
 		$count = 0;
 		$rowCount =1;
@@ -500,7 +527,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$html .='<tr id="wms-tbl-val-'.$count.'">';
 				//build header
 				$html .='<th class="wpmpg-field-tbl">'.__('Row','image-notes-plus-WP'). ' '.$rowCount.'</th>';
-				$html .='<th id="wms-tbl-val-col-'.$count.'" class="wms-val-col">'.__('Value','image-notes-plus-WP'). '</th>';
+				$html .='<th id="wms-tbl-val-col-'.$count.'" class="wms-val-col">'.__('Ready','image-notes-plus-WP'). '</th>';
 			$html .='</tr>';
 			$html .='</thead>';
 			$html .='<tbody class="wpmosaic-import-tbl-body">	';
@@ -527,27 +554,32 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$html .='<input type="hidden" id="wp-custom-post-type" name="wp-custom-post-type" value="'.$wp_custom_post_type.'">';
 		$html .='<input type="hidden" id="wp-total-rows" name="wp-total-rows" value="'.count($rowsDATA).'">';
 		
-		$html .='<div class="wpm-progress-bar" id="wpm-progress-bar">';
+		$html .='<div class="row progress wpm-progress-bar" id="wpm-progress-bar">';
 
-		$html .='<div id="progressbar"><div class="progress-label">'.__('Loading...').'</div></div>
-		<p class="msrm-stat-count">'. __('Imported') .': <span id="msrm-process-val">0</span> '.__('of') .' <span id="msrm-total-val">'.count($rowsDATA).'</span></p>';
+		$html .='
+        <div id="progressbar" class="row progress-contain">
+        <div class="row labels">
+        <div class="col col-6 ">
+             <div class="msrm-stat-count">'. __('Imported') .': <span id="msrm-process-val">0</span> '.__('of') .' <span id="msrm-total-val">'.count($rowsDATA).'</span></div>
+        </div>
+        <div class="col col-6 finish">
+           <div class="progress-label">'.__('Loading...').'</div>
+        </div>
+        </div>
+		</div>';
 	
-		$html .='</div>';
+		$html .='
+        </div>';
 
-		$html .='<div class="wpm-import-opt-bar" id="wpm-import-opt-bar">';
+		$html .='<div class="row batch wpm-import-opt-bar" id="wpm-import-opt-bar">';
 		   // $html .='<p>'.__('Batches').'</p>';
-			$html .=''.__('Batches').': <input type="number" id="batch" name="batch" value="3">';
+			$html .='<span>'.__('Batches').'</span>: <input type="number" id="batch" name="batch" value="3">';
 
 		
 		$html .='</div>';
 
-		$html .='<div class="wpm-import-results-block" id="wpm-import-results-block">';
-		  
-			$html .='<div class="wpm-import-opt-bar-msg" id="wpm-import-opt-bar-msg">';
-			$html .='<h1>'.__('Success').'</h1>';
-			$html .='<p><i class="fa fa-check sucess-check"></i></p>';
-			$html .='<p>'.__('All the rows were imported.').'</p>';
-			$html .= '<p><button name="wpmsaic-ok-finish-btn" id="wpmsaic-ok-finish-btn" class="btn mpg-download-link-btn btn-lg btn-primary btn-custom-primary" type="button"><span><i class="fa fa-thumbs-up"></i></span> '.__('OK','image-notes-plus-wp').' 	</button>	</p>';
+		$html .='<div class="row complete wpm-import-results-block" id="wpm-import-results-block">';
+
 			$html .='</div>';
 		
 		$html .='</div>';
@@ -703,7 +735,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		fclose($handle);
 		// Remove the first one that contains headers
 		$headers = array_shift($rows);
-
+        
 		$this->tblHeaders = $headers;
 		$this->tblRows = $rows;
 
@@ -767,38 +799,64 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		
 		$html .= '</div>';
-		$html .= '<div id="imagenotes-fileupload" class="uploader-button imnot-uploaderclass">';	
+		$html .= '<div id="imagenotes-fileupload" class="item first uploader-button imnot-uploaderclass">';	
 
-		$html .= '<h1 class=" mb-2 ">'.__('Upload a File','image-notes-plus-WP').'</h1>	';
+		$html .= '
+                <div class="col col-6 info">
+                    <div class="label">'.__('Import posts via file','image-notes-plus-WP').'</div>
+                    <div class="description">Upload a CSV spreadsheet to start importing</div>
+                </div>';
 
-		$html .= '<div class="bup-staff-right-avatar " >
+		$html .= '<div class="col col-6 click"><div class="bup-staff-right-avatar " >
 					<div class="bup-avatar-drag-drop-sector"  id="bup-drag-avatar-section">														
 						<div class="uu-upload-avatar-sect">
 
-				<div id="filelist">Your browser does not have Flash, Silverlight or HTML5 support.</div>
-				<br />
-
-				<div id="container">
-					<div class="rownoflexcenter">
-					<button name="plupload-browse-button-avatar" id="pickfiles" class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="link"><span><i class="fa fa-upload"></i></span> '.__('UPLOAD A FILE','image-notes-plus-wp').' 	</button>
-					</div>
-				</div>
+                            <div id="filelist"></div>
 
 
-					<br />
+                            <div id="container">
+                                <div class="rownoflexcenter">
+                                <button name="plupload-browse-button-avatar" id="pickfiles" class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="link"> '.__('Import via File','image-notes-plus-wp').' 	</button>
+                                </div>
+                            </div>
 				
 
 						</div>
 					</div>
 			</div>   
 
-		</div>';
+		</div></div>';
 
-		$html .= '<div class="wpms-downn-url-cont" id="wpms-downn-url-cont">';
-		$html .= '<h1 class=" mb-2 ">'.__('Import from URL','image-notes-plus-WP').'</h1>	';
-		$html .= '<p><input name="file_url" class="file_url" id="file_url" value="" type="text"></p>';
-		$html .= '<p><button name="wpmsaic-download-from-url-btn" id="wpmsaic-download-from-url-btn" class="btn mpg-download-link-btn btn-lg btn-primary btn-custom-primary" type="button"><span><i class="fa fa-download"></i></span> '.__('DOWNLOAD FILE FROM URL','image-notes-plus-wp').' 	</button>	</p>';
-		$html .= '</div>';
+		$html .= '
+        
+        <div class="item wpms-downn-url-cont" id="wpms-downn-url-cont">';
+        
+		$html .= '
+        
+        <div class="col col-6 info">
+            <div class="label">'.__('Import posts via URL','image-notes-plus-WP').'</div>
+            <div class="description">Import directly from Google Sheets</div>
+        </div>
+        
+        ';
+		$html .= '
+        <div class="col col-6 click">
+        
+        <div class="row in">
+        <div class="col col-9">
+        <input name="file_url" class="file_url" id="file_url" value="" type="text" placeholder="https://sheets.google.com/a290s...">
+        </div>';
+        
+		$html .= '
+        <div class="col col-3">
+        <button name="wpmsaic-download-from-url-btn" id="wpmsaic-download-from-url-btn" class="btn mpg-download-link-btn btn-lg btn-primary btn-custom-primary" type="button"> '.__('Start','image-notes-plus-wp').'</button>
+        </div>
+        </div>
+        ';
+        
+		$html .= '
+      ';
+        
 		return $html;
 
 
@@ -1197,8 +1255,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 	function add_menu() {
 		global $wpmpg;			
-		$menu_label = __('Mosaic Page Generator','wp-mosaic-page-generator');		
-		add_menu_page( __('Mosaic Page Generator','wp-mosaic-page-generator'), $menu_label, 'manage_options', $this->slug, array(&$this, 'admin_page'), wpmpg_url .'admin/images/small_logo_16x16.png', '159.140');
+		$menu_label = __('Mosaic Pages','wp-mosaic-page-generator');		
+		add_menu_page( __('Mosaic Pages','wp-mosaic-page-generator'), $menu_label, 'manage_options', $this->slug, array(&$this, 'admin_page'), wpmpg_url .'admin/images/small_logo_16x16.png', '159.140');
 		do_action('wpmpg_admin_menu_hook');
 	}	
 
@@ -1312,8 +1370,28 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			
 	?>
 	
+
 		<div class="wrap <?php echo $this->slug; ?>-admin"> 
-        
+
+            
+<div class="<?php echo $this->slug; ?>-header">
+    
+    <img src="<?php echo plugins_url( 'admin/images/direction-logo.png', dirname( __FILE__ ) ); ?>" alt="Logo">
+    <span class="name">
+        <span class="version">
+        <?php
+            if ( ! function_exists( 'get_plugin_data' ) ) {
+                require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+            }
+
+            $plugin_file_path = plugin_dir_path( __DIR__ ) . 'index.php'; 
+            
+            $plugin_data = get_plugin_data( $plugin_file_path );
+            echo 'Plugin Version: ' . $plugin_data['Version'];
+            ?>
+        </span>
+        Page Generator</span>
+</div>
        
             
                 <h2 class="nav-tab-wrapper"><?php $this->admin_tabs(); ?>               

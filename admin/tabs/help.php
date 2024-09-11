@@ -4,7 +4,16 @@ global $wpmpg;
 
 ?>
 
-<h3><?php _e('Help Center','wp-mosaic-page-generator'); ?></h3>
+<div class="wpmpg-welcome-panel">
+<div class="row item first uploader">
+    <div class="col col-9 info mid">
+        <div class="row label"><?php _e('Help Center','wp-mosaic-page-generator'); ?></div>
+        <div class="row description">Here you can manage your custom post types.</div>
+    </div>
+    <div class="col col-3 click">
+    </div>
+</div>
+
 <form method="post" action="">
 <input type="hidden" name="wpmpg_update_settings" />
 
@@ -15,15 +24,18 @@ global $wpmpg;
 
 
 
-<div class="wpmpg-sect msrm-panel">
-<h3><?php _e('SEO META TAGS RANK MATH PLUGIN','wp-mosaic-page-generator'); ?></h3> 
-<p><?php _e('For Rank Math Plugin the meta description tag is named:','wp-mosaic-page-generator'); ?> <strong>description_wpmosaic</strong> </p> 
+<div class="row in">
+<h3><?php _e('Rank Math Tags','wp-mosaic-page-generator'); ?></h3> 
+<p><?php _e('For Rank Math Plugin the meta description tag is named:','wp-mosaic-page-generator'); ?></p> 
+<p><strong>rank_math_title</strong></p>
+<p><strong>rank_math_description</strong></p>
+<p><strong>rank_math_focus_keyword</strong></p>
     
-<h3><?php _e('SEO META TAGS FOR YOAST PLUGIN','wp-mosaic-page-generator'); ?></h3> 
-<p><?php _e('For Yoast Plugin the meta tags are the follwing:','wp-mosaic-page-generator'); ?> </p> 
-<p><strong>_yoast_wpseo_title</strong> </p> 
-<p><strong>_yoast_wpseo_metadesc</strong> </p> 
-<p><strong>_yoast_wpseo_focuskw</strong> </p> 
+<h3><?php _e('Yoast Tags','wp-mosaic-page-generator'); ?></h3> 
+<p><?php _e('For Yoast Plugin the meta tags are the following:','wp-mosaic-page-generator'); ?> </p> 
+<p><strong>_yoast_wpseo_title</strong></p> 
+<p><strong>_yoast_wpseo_metadesc</strong></p> 
+<p><strong>_yoast_wpseo_focuskw</strong></p> 
     
 </div>
 
@@ -36,3 +48,4 @@ global $wpmpg;
 
 
 </form>
+</div>

@@ -31,12 +31,19 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
 
 <div class="wpmpg-welcome-panel">
 
-<h1 class="wpmpg-extended">New Post Field for <?php echo $cpt->cpt_name?></h1>
-
+    <div class="row item first uploader">
+        <div class="col col-9 info mid">
+            <div class="row label">New Post Field for <?php echo $cpt->cpt_name?></div>
+            <div class="row description">Create a custom field</div>
+        </div>
+        <div class="col col-3 click">
+        </div>
+    </div>
 
 <?php echo wp_kses($auxNewPCT->get_errors(), $wpmpg->allowed_html);?> 
 <?php echo wp_kses($auxNewPCT->sucess_message, $wpmpg->allowed_html);?> 
 
+<div class="row edit-fields">
 <form method="post" action="">
 <input type="hidden" name="wpmpg_create_cpt_cpf"  value="wpmpg_create_cpt_cpf"/>
 <input type="hidden" name="cpf_cpt_id"  id="cpf_cpt_id"  value="<?php echo $cpt_id ?>"/>
@@ -75,12 +82,13 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
     </table>
 
    
-    <p class="submit">
-    <a href="?page=wpmpg&tab=cpt-cpf&id=<?php echo $cpt_id?>"><button type="button" class="button button-secondary button-large"><span style="margin-right:5px"></span><?php _e('Back', 'wp-mosaic-page-generator'); ?></button></a>
-	<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
+    <div class="submit">
+    <a href="?page=wpmpg&tab=cpt-cpf&id=<?php echo $cpt_id?>"><button type="button" class="outline"><?php _e('Back', 'wp-mosaic-page-generator'); ?></button></a>
+	<input type="submit" name="submit" id="submit" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
+    </div>
 </p>
 
    	
 </div>
 </form>
-     
+</div>

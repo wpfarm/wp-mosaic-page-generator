@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Mosaic Page Generator
-Description: Plugin to Import Custom Post Type Pages.
+Description: Premium AI-powered location pages that boost rankings. Requires subscription with Direction.com
 Version: 1.1.8
-Author: Nickolas
+Author: Direction.com
 */
 
 

@@ -29,14 +29,20 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 ?>
 
 <div class="wpmpg-welcome-panel">
-
-<h1 class="wpmpg-extended">Edit Custom Post Types</h1>
-
-
+    
+    <div class="row item first uploader">
+        <div class="col col-9 info mid">
+            <div class="row label">Edit Custom Post Type</div>
+            <div class="row description">Here you can manage your custom post types.</div>
+        </div>
+        <div class="col col-3 click">
+        </div>
+    </div>
 
 <?php echo wp_kses($auxNewPCT->get_errors(), $wpmpg->allowed_html);?> 
 <?php echo wp_kses($auxNewPCT->sucess_message, $wpmpg->allowed_html);?> 
 
+<div class="row edit-fields">
 <form method="post" action="">
 <input type="hidden" name="wpmpg_edit_cpt"  value="wpmpg_edit_cpt"/>
 <input name="cpt_id" id="cpt_id" value="<?php echo $cpt->cpt_id?>" type="hidden"> 
@@ -112,10 +118,10 @@ if(isset($_GET['id']) && $_GET['id']!=''){
     </table>
 
     <p class="submit">
-	<input type="submit" name="submit" id="submit" class="button button-primary" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
+	<input type="submit" name="submit" id="submit" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
 </p>
 
    	
 </div>
 </form>
-     
+</div> 

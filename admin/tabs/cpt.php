@@ -9,26 +9,22 @@ $auxCPF = new WpMosaicCPT();
 ?>
 
 <div class="wpmpg-welcome-panel">
+    <div class="row item first uploader">
+        <div class="col col-9 info mid">
+            <div class="row label">Custom Post Types</div>
+            <div class="row description">Here you can manage your custom post types.</div>
+        </div>
+        <div class="col col-3 click">
+            <a href="?page=wpmpg&tab=cpt-add"><button type="button"><?php _e('Create New', 'wp-mosaic-page-generator'); ?></button></a>
+        </div>
+    </div>
 
-<h1 class="wpmpg-extended">Post Types</h1>
- <p class="wpmpg-extended-p">Here you can manage your custom post types.</p> 
 
+<div class="row post-types">
 
- <div class="wpmpg-sect wpmpg-welcome-panel">
-
- <div class="rownoflex getbwp-button-bart">
-    <a href="?page=wpmpg&tab=cpt-add"><button type="button" class="button button-primary button-large"><span style="margin-right:5px"><i class="fa fa-plus"></i></span><?php _e('Create New', 'wp-mosaic-page-generator'); ?></button></a>
-
- </div>
+<?php /* ?><div class="rownoflex getbwp-button-bart"></div><?php */ ?>
         
-        <?php
-           
-           
-               
-               if (!empty($cptRows)){
-               
-               
-               ?>
+<?php if (!empty($cptRows)){ ?>
       
           <table width="100%" class="wp-list-table widefat fixed posts table-generic">
            <thead>
@@ -58,10 +54,17 @@ $auxCPF = new WpMosaicCPT();
                    <td><?php echo esc_attr($cpt->cpt_name); ?></td>  
                    <td><?php echo esc_attr($cpt->cpt_unique_key); ?></td> 
                    <td><?php echo $cpf_qty; ?></td>                  
-                   <td>&nbsp;
-                   <a href="?page=wpmpg&tab=cpt-cpf&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Fields','wp-mosaic-page-generator'); ?>"><i class="fa fa-bars"></i></a> 
-                   <a href="?page=wpmpg&tab=cpt-edit&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Edit','wp-mosaic-page-generator'); ?>"><i class="fa fa-edit"></i></a> 
-                   <a href="#" class="wpmpg-int-delete-acc" acc-id="<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a></td>
+                   <td>
+                    <a class="left" href="?page=wpmpg&tab=cpt-cpf&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Fields','wp-mosaic-page-generator'); ?>">Edit Fields</a>                       
+                       
+                    <a class="right edit outline" href="?page=wpmpg&tab=cpt-edit&id=<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Edit','wp-mosaic-page-generator'); ?>">
+                    <img src="<?php echo plugins_url( 'images/icon-settings.svg', dirname( __FILE__ ) ); ?>">
+                    </a> 
+                   <a href="#" class="wpmpg-int-delete-acc right delete" acc-id="<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a>                      
+                       
+                    
+
+                   </td>
                   
                </tr>
                

@@ -66,29 +66,40 @@ jQuery(document).ready(function($) {
         e.preventDefault();         
     });   
 
-    $(document).on("click", "#wpmsaic-download-from-url-btn", function() {   
-        
-        $.ajax({
-            type: 'POST',
-            url: ajaxurl,
-            data: {"action": "wpmpg_download_url_file", 
-                    "link_to_download": $("#file_url").val()  
-                   
-                    },                       
-                  success: function(data){
-                    var res =jQuery.parseJSON(data);	                
 
-                    $("#file_uploaded").val(res.image);
-                    $("#msrm-imp-options").slideDown(400);	
-                    $("#msm-btn-steps-bar").slideDown(400);	                  
-                      
-                  }
-        });      
-                  
+    
+    
+    
+    
+ $(document).on("click", "#wpmsaic-download-from-url-btn", function() {   
         
-          
-    });
+    $.ajax({
+        type: 'POST',
+        url: ajaxurl,
+        data: {"action": "wpmpg_download_url_file", 
+               "link_to_download": $("#file_url").val()
+        },                       
+        success: function(data){
+            var res = jQuery.parseJSON(data);	                
 
+            $("#file_uploaded").val(res.image);
+            $("#msrm-imp-options").slideDown(400, function() {
+                // Check if the #msrm-imp-options container is set to display:block
+                if ($(this).css('display') === 'block') {
+                    // Add the "on" class after the container is displayed
+                    $("#wpmsaic-download-from-url-btn").addClass('on');
+                }
+            });	
+            $("#msm-btn-steps-bar").slideDown(400);	                  
+        }
+    });      
+});
+    
+    
+    
+    
+    
+    
 
 	
 });
@@ -115,7 +126,7 @@ function ms_build_links_array (){
           progressLabel.text( progressbar.progressbar( "value" ) + "%" );
         },
         complete: function() {
-          progressLabel.text( "Complete!" );
+          progressLabel.html( "<span class='icon-check'>Complete</span>" );
         }
     });
 
@@ -214,7 +225,7 @@ function mark_as_processed (to_val){
     var i = 0;
     while (i <= to_val) {
         $("#wms-tbl-val-"+i).addClass('wpm-processed-row');   
-        $("#wms-tbl-val-col-"+i).html('<i class="fa fa-check sucess-check"></i>');     
+        $("#wms-tbl-val-col-"+i).html('<span class="icon-check"><span class="text">Complete</span></span>');     
         i++;
     }  
 }
