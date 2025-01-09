@@ -41,28 +41,28 @@
  .mspbar{ 
 	
 	background: #fff;
-	position: relative;
-	
+	position: relative;	
 	margin: 0 auto;
 	border-radius: 8px;
    
   }
 
-.wp-upload-cont-opt {
-
-	
+.wp-upload-cont-opt {	
 	width: 100%;
 	text-align: center;
 }
 
 .wp-upload-opt {
-
 	display: inline-block;
 	width: 100%;
 	min-height: 120px;
 	vertical-align: middle;
 
-  }
+}
+
+.rmcalculator{
+	display: none;
+}
 
 .wpmpg-welcome-panel {
     position: relative;
@@ -108,13 +108,6 @@
   .wpm-hide_body-table{
 	display: none;	
   }
-
-
-
-
-
-
-
 
   .wpm-import-results-block .wpm-import-opt-bar-msg{
 

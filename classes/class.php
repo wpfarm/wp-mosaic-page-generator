@@ -1,4 +1,11 @@
 <?php
+use RankMath\Helper;
+use RankMath\Helpers\Param;
+use RankMath\Traits\Hooker;
+use RankMath\Paper\Paper;
+use RankMath\Admin\Metabox\Screen;
+use RankMath\Schema\DB;
+
 class WpMosaicPageGenerator extends wpmpgCommon {
 	
 	var $wp_all_pages = false;
@@ -7,13 +14,32 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $wpmpg_default_options;	
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
-	var $mVersion = '1.0.8';
+	var $mCustomPostType;
+	var $mVersion = '1.91';
 	public $allowed_html;
 
 	var $tblHeaders;	
 	var $tblRows;			
 	var $tblCombinedRows;
-	public function __construct()	{			
+
+	
+	/**
+	 * Screen object.
+	 *
+	 * @var object
+	 */
+	public $screen;
+
+	/**
+	 *  Prefix for the enqueue handles.
+	 */
+	const PREFIX = 'rank-math-';
+
+	public function __construct()	{	
+		
+		
+		$this->screen = new Screen();
+		$this->screen->load_screen( 'post' );
 			
 		$this->slug = 'wpmpg';			
 		$this->ini_module();	
@@ -25,7 +51,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action('admin_menu', array(&$this, 'add_menu'), 11);
 		add_action('admin_head', array(&$this, 'admin_head'), 13 );
 		add_action('admin_init', array(&$this, 'admin_init'), 15);			
-		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 12);
+		
 		add_action('add_meta_boxes', array($this, 'post_add_meta_box' ));	
 		add_action('init', array($this, 'ini_group_modules_pro'));	
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_upload_file',  array( $this, 'upload_file_parse' ));
@@ -34,7 +60,191 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf',  array( $this, 'delete_cpf' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf_value',  array( $this, 'delete_cpf_value' ));
 
-    }	
+		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_score_rebuild',  array( $this, 'get_post_data_for_analysis' ));
+		add_action('save_post',  array( &$this, 'update_cpt_details' ), 94);
+		add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);
+		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
+    }
+
+	/**
+	 * Enqueue scripts & add JSON data needed to update the SEO score on existing posts.
+	 */
+	public function enqueue($hook) {
+		
+		$scripts = [
+			'lodash'             => '',
+			'wp-data'            => '',
+			'wp-core-data'       => '',
+			'wp-compose'         => '',
+			'wp-components'      => '',
+			'wp-element'         => '',
+			'wp-block-editor'    => '',
+			'rank-math-analyzer' => rank_math()->plugin_url() . 'assets/admin/js/analyzer.js',
+			'rank-math-status'    => rank_math()->plugin_url() . 'includes/modules/status/assets/js/status.js',
+		];
+
+		foreach ( $scripts as $handle => $src ) {
+			wp_enqueue_script( $handle, $src, [], rank_math()->version, true );
+		}
+
+		global $post;
+		$temp_post = $post;
+		if ( is_null( $post ) ) {
+			$posts = get_posts(
+				[
+					'fields'         => 'id',
+					'posts_per_page' => 1,
+					'post_type'      => $this->get_post_types(),
+				]
+			);
+			$post  = isset( $posts[0] ) ? $posts[0] : null;
+		}
+	
+		$this->screen->localize();
+		
+		// Load only on specific admin pages
+		if ('toplevel_page_wpmpg' === $hook) {
+
+			$js     = rank_math()->plugin_url() . 'assets/admin/js/';
+			$css    = rank_math()->plugin_url() . 'assets/admin/css/';
+
+			wp_enqueue_script('wp-editor'); // Required for editor-related scripts
+			wp_enqueue_script('wp-data');   // Used by Gutenberg and Rank Math
+
+			// Scripts.
+			wp_enqueue_script( self::PREFIX . 'dashboard', $js . 'dashboard.js', [ 'jquery', 'clipboard', 'lodash', 'wp-components', 'wp-element' ], rank_math()->version, true );
+		    wp_enqueue_script( 'clipboard', rank_math()->plugin_url() . 'assets/vendor/clipboard.min.js', [], rank_math()->version, true );
+			
+
+			if ( ! wp_script_is( 'lodash', 'registered' ) ) {
+				wp_register_script( 'lodash', rank_math()->plugin_url() . 'assets/vendor/lodash.js', [], rank_math()->version );
+				wp_add_inline_script( 'lodash', 'window.lodash = _.noConflict();' );
+			}
+			
+			wp_enqueue_script('rank-math-common-js', plugins_url('seo-by-rank-math/assets/admin/js/common.js'), ['jquery'], null, true);
+			wp_enqueue_script('rank-math-app-js', plugins_url('seo-by-rank-math/assets/admin/js/rank-math-app.js'), ['jquery'], null, true);
+            wp_enqueue_script('rank-math-schema-js', plugins_url('seo-by-rank-math/includes/modules/schema/assets/js/schema-gutenberg.js'), ['jquery'], null, true);
+
+		}	
+
+	}
+
+	/**
+	 * Enqueque scripts common for all builders.
+	 */
+	private function enqueue_commons() {
+		wp_register_style( 'rank-math-editor', rank_math()->plugin_url() . 'assets/admin/css/gutenberg.css', [ 'rank-math-common' ], rank_math()->version );
+		wp_register_script( 'rank-math-analyzer', rank_math()->plugin_url() . 'assets/admin/js/analyzer.js', [ 'lodash', 'wp-autop', 'wp-wordcount' ], rank_math()->version, true );
+	}
+
+	/**
+	 * Get post types.
+	 *
+	 * @return array
+	 */
+	private function get_post_types() {
+		$post_types = get_post_types( [ 'public' => true ] );
+		if ( isset( $post_types['attachment'] ) ) {
+			unset( $post_types['attachment'] );
+		}
+
+		return array_keys( $post_types );
+	}
+
+	/**
+	 * Modal to show the Update SEO Score progress.
+	 *
+	 * @return array
+	 */
+	public function footer_modal() {
+		if ( Param::get( 'page' ) !== 'rank-math-status' || Param::get( 'view' ) !== 'tools' ) {
+			return;
+		}
+		?>
+		<div class="rank-math-modal rank-math-modal-update-score">
+			<div class="rank-math-modal-content">
+				<div class="rank-math-modal-header">
+					<h3><?php esc_html_e( 'Recalculating SEO Scores', 'rank-math' ); ?></h3>
+					<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'rank-math' ); ?></p>
+				</div>
+				<div class="rank-math-modal-body">
+					<div class="count">
+						<?php esc_html_e( 'Calculated:', 'rank-math' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total"><?php echo esc_html( $this->find() ); ?></span>
+					</div>
+					<div class="progress-bar">
+						<span></span>
+					</div>
+
+					<div class="rank-math-modal-footer hidden">
+						<p>
+							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'rank-math' ); ?>
+						</p>
+						<button class="button button-large rank-math-modal-close"><?php esc_html_e( 'Close', 'rank-math' ); ?></button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	
+	function add_styles(){
+		global $wp_locale, $wpmpg , $pagenow; 		
+		wp_enqueue_script( 'jquery-ui-core' ); 
+		wp_register_style('wpmpg_fontawesome', wpmpg_url.'admin/css/font-awesome/css/font-awesome.min.css');
+		wp_enqueue_style('wpmpg_fontawesome');
+		wp_register_style('wpmpg_admin', wpmpg_url.'admin/css/admin.css' , array(), '1.0.6', false);
+		wp_enqueue_style('wpmpg_admin');
+ 
+		wp_register_style('wpmpg_jqueryui', wpmpg_url.'admin/css/jquery-ui.css');
+		wp_enqueue_style('wpmpg_jqueryui');
+ 
+		wp_register_script( 'wpmpg_front_uploader', wpmpg_url.'vendors/plupload/js/plupload.full.min.js',array('jquery'),  null);
+		wp_enqueue_script('wpmpg_front_uploader');
+ 
+		wp_register_script( 'wpmpg_admin', wpmpg_url.'admin/scripts/admin.js', array( 
+		 'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion, true );
+		wp_enqueue_script( 'wpmpg_admin' );		  
+	}      
+ 
+	
+	function update_cpt_details( $post_id ){
+			
+		// If this is just a revision, don't send the email.
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave($post_id) )
+			return;
+				 
+		 $post = get_post($post_id);
+        if($post->post_status == 'trash' ){
+                return $post_id;
+        }
+
+		$post_type = $post->post_type;
+
+		$cptRows = $this->getAllCustomFieldsByType($post_type);
+		foreach($cptRows as $cpt) {
+			
+			$meta = $cpt->cpf_field_name ;
+			$dd_t_value = $_POST[$meta];
+		    update_post_meta( $post_id, $meta,$dd_t_value);
+		}			
+			
+	}	
+
+	function getAllCustomFieldsByType($cp_type)   {
+		global $wpdb;			
+		$html = '';
+		$sql =  'SELECT cpf.*, cpt.*  FROM ' . $wpdb->prefix . 'cpt_fields cpf  ' ;				
+		$sql .= " RIGHT JOIN ". $wpdb->prefix."cpt  cpt  ON (cpt.cpt_id = cpf.cpf_cpt_id )";		
+		$sql .= " WHERE cpt.cpt_id = cpf.cpf_cpt_id    ";	
+		$sql .= " ORDER BY  cpf.cpf_field_sorting ";	
+		$sql = $wpdb->prepare($sql);
+		//echo $sql;
+		$cptRows = $wpdb->get_results($sql );
+		return $cptRows ;
+	
+	}
+
 
 	function post_add_meta_box(){	
 		
@@ -71,6 +281,18 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			';
 			
 		$wpdb->query( $query );	
+
+		$query = '
+			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_credits(
+			  `credit_id` int(11) NOT NULL AUTO_INCREMENT,	
+			  `credit_page_id` int(11) NOT NULL ,				 
+					  			 	  
+			  PRIMARY KEY (`credit_id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+			';
+			
+		$wpdb->query( $query );	
+
 	}
 
 	// File upload handler:
@@ -120,46 +342,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();
 	}
 
-	// File upload handler:
-	function download_from_url($url, $meta_slug){
-						
-		$image = file_get_contents($url);			
-		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;				
-
-		//$rand_name = basename($url);
-		$rand_name =$meta_slug;		
-
-		$parsedUrl = parse_url($url);
-		$pathInfo = pathinfo($parsedUrl['path']);
-
-		$real_name = $pathInfo['basename'];
-		$ext = $pathInfo['extension'];
-		$ext=strtolower($ext);
-			
-		$upload_dir = wp_upload_dir(); 
-		$path_pics =   $upload_dir['basedir'];		
-					
-		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'webp' || $ext == 'gif' ){
-				
-			if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
-				wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
-			}
-			
-			//check if image name already exists/												
-			//$pathBig = $path_pics.'/'.$upload_temp_folder."/".$rand_name;
-
-			//if(file_exists($pathBig)){ //we need to rename it with image slug
-
-				$pathBig = $path_pics.'/'.$upload_temp_folder."/".$meta_slug.'.'.$ext;
-			//}		
-			
-
-			file_put_contents($pathBig, $image);
-					
-		} // image type
-		return $pathBig;
-	}
-
+	
 	function analize_url_to_download($url){
 
 		$parsedUrl = parse_url($url);
@@ -242,6 +425,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$cpf = $_POST['acc_id'] ?? '';
 		if($cpf=='') echo 'error';
 		$wpdb->delete( $wpdb->prefix . 'cpt', [ 'cpt_id'=>$cpf ], [ '%d' ] );
+		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_cpt_id'=>$cpf ], [ '%d' ] );
 		echo 'deleted: '. $cpf;
 		die();
 	}
@@ -262,12 +446,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 		$this->import_from_url($file);	
 
+		$postIDArray = array();
 		$headers = $this->tblHeaders;
 		$rowsDATA = $this->tblRows;
 		$rowsDOrigin = $this->tblRows;	
 		$rowsCombined = $this->tblCombinedRows;		
 
-		$only_metas = array_slice($headers, 3, count($headers), false); 
+		$only_metas = array_slice($headers, 6, count($headers), false); 
 
 		$batch_from = $_POST['batch'] ?? 1;
 		$last_row = $_POST['last'] ?? 0;				
@@ -292,20 +477,21 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$percent_a = round(($total_processed_rows * 100) / count($rowsDATA));	
 
 		$act_update_new = $_POST['act_update_new'] ?? '';
-		$wp_custom_post_type = $_POST['wp-custom-post-type'] ?? '';
-		$fields_type_col = $this->getPostMetaFieldsCol($wp_custom_post_type);		
+		
+		$fields_type_col = $this->getPostMetaFieldsColNew($only_metas);	
+		$this->setCPT($rowsDATASliced, $fields_type_col);	
 
 		$count = 0;
 		$rowCount =1;
 
 		$rowsDATA = $rowsDATASliced;			
 		foreach ( $rowsDATA  as $data ) {					
-			$post_type = $wp_custom_post_type;
-			$post_title = $rowsDATA[$count][0];
-			$post_slug = $rowsDATA[$count][1];
- 			$rank_math_title = $rowsDATA[$count][2];            
-			$meta_desc = $rowsDATA[$count][3];   
-			$keyword = $rowsDATA[$count][4];   
+			$post_type = $rowsDATA[$count][0];
+			$post_title = $rowsDATA[$count][1];
+			$post_slug = $rowsDATA[$count][2];
+ 			$rank_math_title = $rowsDATA[$count][3];            
+			$meta_desc = $rowsDATA[$count][4];   
+			$keyword = $rowsDATA[$count][5];   
 			$post_desc ='';		
 			$post_excerpt = '';		
 			
@@ -319,8 +505,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$my_post = array(
 				'post_title'    => $post_title,
 				'post_content'  => $post_desc,
-				'post_excerpt'  => $post_excerpt,
-				//'guid'  => $post_slug,	
+				'post_excerpt'  => $post_excerpt,			
 				'post_name'  => $post_slug,			
 				'post_status'   => 'publish',
 				'post_author'   => $user_id,
@@ -331,11 +516,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$post_exists = $this->the_slug_exists($post_slug, $post_type);	
 
 			if(!$post_exists){
+
 				// Insert the post into the database
 				$update_post = false;
 				$post_id = wp_insert_post( $my_post );	
+				
 
 			}else{
+
+				//echo "update post ";
 				$post = $this->get_post_id_by_slug($post_slug, $post_type);
 				$post_id = $post[0]->ID;
 				$update_post = true;
@@ -347,37 +536,41 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 				);
 				wp_update_post( $my_post ); 
+
+				//echo "update post 2";
 			}					
 						
 			update_post_meta( $post_id, '_yoast_wpseo_title',$post_title );
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc',$meta_desc );
 			update_post_meta( $post_id, '_yoast_wpseo_focuskw',$post_title );
-			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );
-            
+			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );            
 			update_post_meta( $post_id, 'rank_math_title',$rank_math_title );            
 			update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
 			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
+
+			$postIDArray[] = $post_id;
+
+			//$this->get_or_save_rank_math_seo_score($post_id);
 		
-			$i = 3;			
+			$i = 6;			
 			foreach ( $only_metas  as $meta_key ) {
+
 				$val_import = $rowsDATA[$count][$i] ?? '';
-				if(isset( $fields_type_col[$meta_key])) { //if there is a custom field for this post type
+				
+				if(isset( $fields_type_col[$meta_key])) { //if there is a custom field for this post type				
 
 					$custom_field = $fields_type_col[$meta_key];
 					if($custom_field['cpf_field_type']==1){ //text
+						
 
 						update_post_meta( $post_id, $meta_key,$val_import );
 
 					}else{ //image		
+
+						//echo "Flag 55 ";
 							
- $meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
-
-// Update this line to include the alt attribute
-$img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.$val_import.'">';                       
-                        
-	
-						update_post_meta( $post_id, $meta_key,$img_val );
-
+						$meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
+						
 						$meta_alternative_text= $meta_key.'_alternative_text';
 						$meta_title= $meta_key.'_title';
 						$meta_slug= $meta_key.'_slug';
@@ -386,14 +579,24 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 						$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
 						$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
 						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
-						$meta_description = $rowsCombined[$count][$meta_description] ?? '';	
+						$meta_description = $rowsCombined[$count][$meta_description] ?? '';									
 						
 						//check if image already exists
 
-						$img_path = $this->download_from_url($val_import, $meta_slug);
+						//echo "<BR>IMAGE TO DOWNLOAD: " . $val_import ."<BR>";
+						$img_path = $this->download_from_url($val_import, $meta_slug, $post_id, $meta_key);
+						//echo "Flag 56 ";
 						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
-						
+
+					
 						if($attach_id!=''){
+
+							$thumb_url = wp_get_attachment_url($attach_id);
+							// Update this line to include the alt attribute
+						    $img_val = '<img class="test" alt="'.esc_attr($meta_text).'" src="'.$thumb_url.'">';                       
+						    update_post_meta( $post_id, $meta_key,$img_val );
+						   // update_post_meta( $post_id, '_wp_attachment_image_alt', $meta_text );
+
 							// Set the image Alt-Text
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
 							$my_image_meta = array(
@@ -412,9 +615,9 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 				}				
 					
 				$i++;
+
 		    }	//end foreach
 			$count++;
-
 
 	    }	// end for each data
 
@@ -425,17 +628,206 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 						  'cut_to' => $cut_to , 
 						  'total_rows' => count($rowsDOrigin),
 						  'total_left' => count($rowsDATASliced),
-						  'sliced_rows' => $rowsDATASliced);
+						  'sliced_rows' => $rowsDATASliced,
+						  'postIDS' => $postIDArray);
 
 		echo json_encode($response);
-
-		die();
-		
-		
+		die();				
 	
 	}
 
+
+	function get_post_data_for_analysis() {
+		if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {
+			wp_send_json_error(['message' => 'Invalid post ID']);
+		}
+	
+		$post_id = intval($_POST['post_id']);
+		$post = get_post($post_id);
+	
+		if (!$post) {
+			wp_send_json_error(['message' => 'Post not found']);
+		}
+	
+		// Prepare post data
+		$post_data = [
+			'title'   => $post->post_title,
+			'content' => $post->post_content,
+			'excerpt' => $post->post_excerpt,
+			'meta'    => get_post_meta($post_id),
+		];
+	
+		wp_send_json_success($post_data);
+	}
+
+	function generate_post_score(){
+
+		//step 1 get new post IDS
+		$url = wpmpg_url.'wp-json/rankmath/v1/toolsAction';
+
+		//make the call
+		$data = json_encode([
+			'action' => 'update_seo_score',
+			'args[update_all_scores]' => '1',
+		]);
+
+		$res = $this->make_post_request($url, $data);
+		echo "Update scores ID: ".$res;		
+
+		//update scores by using the RankMath API
+
+
+
+	}
+
+	function get_or_save_rank_math_seo_score($post_id) {
+
+		// Ensure WordPress function for checking plugins is available
+		if (!function_exists('is_plugin_active')) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		// Check if the score already exists
+		$seo_score = get_post_meta($post_id, 'rank_math_seo_score', true);
+
+		// Check if the Rank Math plugin is active
+		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {	
+			
+			// If not, calculate and save it
+			if (empty($seo_score) && function_exists('rank_math')) {
+
+
+				$body = json_encode([
+					'key1' => 'value1',
+					'key2' => 'value2',
+				]);
+
+				//$this->make_post_request($url, $data)
+
+				//$this->generate_post_score();
+
+				   // Trigger the SEO Analyzer for the given post ID
+				 //  $analyzer = rank_math()->modules->analysis->analyze_object($post_id);
+
+				   //print_r( $analyzer);
+
+			
+
+				// Trigger the Rank Math analysis for the post
+
+				//rank_math()->update_post_score($post_id);
+				//rank_math()->meta->analyze_post($post_id);
+
+				
+
+				 // Retrieve the calculated score from post meta
+				$seo_score = get_post_meta($post_id, 'rank_math_seo_score', true);
+
+				
+				//$seo_score = rank_math()->modules->analysis->get_seo_score($post_id);
+				//update_post_meta($post_id, 'rank_math_seo_score', $seo_score);
+
+				echo "SEO score Calculated: ". $seo_score;
+			}
+		}
+	
+		return $seo_score;
+	}
+
+	/**
+	 * Function to make a POST request.
+	 *
+	 * @param string $url The endpoint URL.
+	 * @param array $data The data to send in the POST body.
+	 * @param array $headers Optional. Headers for the request.
+	 * @return mixed Response body on success, or WP_Error on failure.
+	 */
+	function make_post_request($url, $data, $headers = []) {
+		// Set default headers if none are provided
+		$default_headers = [
+			'Content-Type' => 'application/json',
+		];
+
+		// Merge default and custom headers
+		$headers = wp_parse_args($headers, $default_headers);
+
+		// Prepare the request arguments
+		$args = [
+			'method'  => 'POST',
+			'body'    => json_encode($data),
+			'headers' => $headers,
+			'timeout' => 45, // Optional timeout
+		];
+
+		// Send the POST request
+		$response = wp_remote_post($url, $args);
+
+		// Handle errors
+		if (is_wp_error($response)) {
+			return $response; // Return error object
+		}
+
+		// Retrieve and return the response body
+		return wp_remote_retrieve_body($response);
+	}
+
+	// File upload handler:
+	function download_from_url($url, $meta_slug,  $post_id, $meta_key){
+						
+		$image = file_get_contents($url);			
+		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;				
+
+		//$rand_name = basename($url);
+		$rand_name =$meta_slug;		
+
+		$parsedUrl = parse_url($url);
+		$pathInfo = pathinfo($parsedUrl['path']);
+
+		$real_name = $pathInfo['basename'];
+		$ext = $pathInfo['extension'];
+		$ext=strtolower($ext);
+			
+		$upload_dir = wp_upload_dir(); 
+		$path_pics =   $upload_dir['basedir'];		
+					
+		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'webp' || $ext == 'gif' ){
+				
+			if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
+				wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
+			}				
+
+			$pathBig = $path_pics.'/'.$upload_temp_folder."/".$meta_slug.'.'.$ext;		
+			if(file_exists($pathBig)){ //we need to rename it with image slug		
+				
+				wp_delete_file($pathBig);
+
+				//find in post_meta by metavalue
+				$file_name_meta = $upload_temp_folder."/".$meta_slug.'.'.$ext;
+
+				global $wpdb;
+				$sql = "Select post_id, meta_key,  meta_value from ". $wpdb->postmeta  ." where meta_value = '".$file_name_meta."' ";
+                $results = $wpdb->get_results($sql);
+				if ( !empty( $results ) ){					
+					foreach ( $results as $item ){
+						$attacment_id = $item->post_id;						
+						wp_delete_post($attacment_id,true) ;
+						delete_post_meta( $attacment_id, $meta_key );									
+					
+					}	
+				}
+				
+				
+			}			
+
+			file_put_contents($pathBig, $image);
+					
+		} // image type
+		return $pathBig;
+	}
+
+
 	function attach_image_to_project($file_path, $file_name, $post_id  , $user_id){
+
 		$mime_type = wp_get_image_mime($file_path);
 		$attachment = array(
 			'post_parent' =>$post_id,
@@ -444,19 +836,11 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 			'post_title' => $file_name,
 			'post_content' => '',
 			'post_status' => 'inherit'
-		);	
+		);			
 
-		if ( has_post_thumbnail( $post_id ) ) {
-			$attach_id = get_post_thumbnail_id( $post_id );
-
-		 }else{
-			$attach_id = wp_insert_attachment( $attachment, $file_path );
-
-		 }
-			
+		$attach_id = wp_insert_attachment( $attachment, $file_path );			
 		$attach_data = wp_generate_attachment_metadata( $attach_id, $file_path );
-		wp_update_attachment_metadata( $attach_id, $attach_data );	
-		set_post_thumbnail( $post_id, $attach_id );	
+		wp_update_attachment_metadata( $attach_id, $attach_data );			
 		return $attach_id;
 	}
 
@@ -469,16 +853,22 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 		}
 	}
 
+	function the_field_exists($post_name, $post_id) {
+		global $wpdb;
+		if($wpdb->get_row("SELECT cpf_cpt_id, cpf_field_name FROM ". $wpdb->prefix. "cpt_fields 
+		                   WHERE cpf_cpt_id = '" . $post_id . "' AND cpf_field_name = '" . $post_name . "'", 'ARRAY_A')) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 
 	function get_post_id_by_slug( $slug, $post_type ) {
 		global $wpdb;
 		$sql = "SELECT ID FROM ". $wpdb->prefix. "posts where post_type='".$post_type."' AND post_name='".$slug."'";
-		//echo "SQL : " . $sql ."<br>";
 		return $wpdb->get_results($sql);
 	}
-	
-
-	
 
 	public function build_data_table($file){
 		global $wpdb;		
@@ -508,13 +898,7 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
         </div>
         </div>
         
-       ';
-
-        
-        
-        
-        
-
+       ';   
 
 		$html .= ' <div class="row items mspg-tbl-cont msrm-panel" id="mspg-tbl-cont"  >';
 
@@ -588,6 +972,153 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 	
 	}
 
+	public function getPostMetaFieldsColNew( $only_metas)   {
+			
+		$arrCol = array();		
+		
+		$img_metadata = array('slug');
+		foreach ( $only_metas  as $meta_key ) {			
+
+			if (strpos($meta_key, 'custom_field') !== false) {
+				$cpf_field_type = 1;
+			}else{ //image	
+
+				if (strpos($meta_key, 'slug') !== false) { //is slug
+					$cpf_field_type = 1;
+				}elseif(strpos($meta_key, 'alternative_text') !== false){ 
+					$cpf_field_type = 1;
+				}elseif(strpos($meta_key, 'title') !== false){ 
+					$cpf_field_type = 1;
+				}elseif(strpos($meta_key, 'description') !== false){ 
+					$cpf_field_type = 1;
+
+				}else{
+
+					$cpf_field_type = 0;	//it's the image itself
+				}				
+			}	
+
+			if($this->is_custom_field($meta_key)){
+				$arrCol[$meta_key] = array('cpf_field_type' =>$cpf_field_type);
+			}
+			
+			
+		}	//end foreach
+				
+		return $arrCol;
+    }
+
+	//check if custom field
+	public function is_custom_field( $meta_key)   {	
+
+		if (strpos($meta_key, 'custom_field') !== false) {			
+			return true;
+
+		}elseif(strpos($meta_key, 'custom_image') !== false){ //image	
+
+			return true;
+	
+		}else{
+
+			return false;
+
+		}		
+	
+    }
+
+	public function get_field_type( $meta_key)   {	
+
+		if (strpos($meta_key, 'custom_field') !== false) {
+			$cpf_field_type = 1;
+		}else{ //image	
+
+			if (strpos($meta_key, 'slug') !== false) { //is slug
+				$cpf_field_type = 1;
+			}elseif(strpos($meta_key, 'alternative_text') !== false){ 
+				$cpf_field_type = 1;
+			}elseif(strpos($meta_key, 'title') !== false){ 
+				$cpf_field_type = 1;
+			}elseif(strpos($meta_key, 'description') !== false){ 
+				$cpf_field_type = 1;
+
+			}else{
+
+				$cpf_field_type = 0;	//it's the image itself
+			}				
+		}					
+		return $cpf_field_type;
+    }
+
+	public function setCPT($rowsDATA, $fields)   {
+		global $wpdb;		
+		$arrCol = array();	
+
+		$count = 0;
+		foreach ( $rowsDATA  as $data ) {					
+			$post_type = strtolower($rowsDATA[$count][0]);
+
+			//check if CPT exists
+			if (!$this->cpt_exists_in_db($post_type)){
+				$projects_labels = array(
+					'name' => $post_type,
+					'singular_name' => ucfirst($post_type),
+					'add_new' => __('Add new'),
+					'add_new_item' =>__('Add new item'),
+					'edit_item' => __('Edit item'),
+					'new_item' => __('New item'),
+					'view_item' => __('View item'),
+					'search_items' => __('Search items'),
+					'not_found' =>__('Not found'),
+					'not_found_in_trash' => __('Not found in trash'),
+					'parent_item_colon' => '');
+							
+				//we can create the membership				
+				$new_record = array('cpt_id' => NULL,	
+									'cpt_name' =>ucfirst($post_type),
+									'cpt_unique_key' =>$post_type,								
+									'cpt_properties' => json_encode( $projects_labels),								
+										
+									);	
+													
+																		
+				$wpdb->insert( $wpdb->prefix .'cpt', $new_record, 
+				array( '%d', '%s' , '%s' , '%s'));
+
+				// Get the last inserted ID
+				$post_type_id = $wpdb->insert_id;	
+								
+				
+			}else{		
+				//update custom fields
+				$post_type_id = $this->mCustomPostType;
+			}
+
+			//lest create the custom fields for this CPT
+			foreach ( $fields  as $meta_key => $value ) {
+				$field_name = $meta_key;
+				$field_type = $this->get_field_type($field_name);
+	
+				if(!$this->the_field_exists($field_name, $post_type_id)){		
+					//let's create the field
+					$new_record = array(
+						'cpf_id' => NULL,
+						'cpf_cpt_id' => $post_type_id,
+						'cpf_field_type' => $field_type,
+						'cpf_field_label' =>$field_name,
+						'cpf_field_name' =>$field_name,
+						'cpf_field_default_value' =>0);						
+					
+					$wpdb->insert( $wpdb->prefix .'cpt_fields', $new_record, 
+					array( '%d', '%s' , '%s' , '%s' , '%s' , '%s'));
+				}
+			}		
+			
+			$count++;
+
+	    }	// end for each data
+		
+    }
+
 	public function getPostMetaFieldsCol($ptype)   {
 		global $wpdb;		
 
@@ -607,6 +1138,22 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 
     }
 
+
+	public function getAllCustomFields()   {
+		global $wpdb;			
+		$html = '';
+		$sql =  'SELECT cpf.*, cpt.*  FROM ' . $wpdb->prefix . 'cpt_fields cpf  ' ;				
+		$sql .= " RIGHT JOIN ". $wpdb->prefix."cpt  cpt  ON (cpt.cpt_id = cpf.cpf_cpt_id )";		
+		$sql .= " WHERE cpt.cpt_id = cpf.cpf_cpt_id    ";	
+		$sql .= " ORDER BY  cpf.cpf_field_sorting ";	
+		$sql = $wpdb->prepare($sql);
+		//echo $sql;
+		$cptRows = $wpdb->get_results($sql );
+		return $cptRows ;
+
+    }
+
+
 	public function getPostMetaFields($oPost)   {
 
 		global $wpdb;	
@@ -622,7 +1169,6 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 		$sql .= " WHERE cpt.cpt_id = cpf.cpf_cpt_id  AND  cpt.cpt_unique_key = %s   ";	
 		$sql .= " ORDER BY  cpf.cpf_field_sorting ";	
 		$sql = $wpdb->prepare($sql,array($sObjectType));
-
 
 		$cptRows = $wpdb->get_results($sql );
 
@@ -659,6 +1205,23 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 		echo $html;
 
     }
+
+	public function cpt_exists_in_db($cpt){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			
+		$sql .= ' WHERE cpt_unique_key = "'.$cpt.'"' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				$this->mCustomPostType = $row->cpt_id;
+				return true;			
+			}
+		}		
+		
+		return 	  $res;				
+	}
 
 	public function cpt_exists($cpt){
 
@@ -739,20 +1302,7 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 		$this->tblHeaders = $headers;
 		$this->tblRows = $rows;
 
-		//echo '<pre>';
 
-		//print_r(array_slice($headers, 3, count($headers), false)); 
-
-		//echo '</pre>';
-	
-
-		//echo '<pre>';
-
-		//print_r($headers);
-
-		//print_r($rows);
-
-		//echo '</pre>';
 		// Combine the headers with each following row
 		$array = [];
 		foreach ($rows as $row) {
@@ -760,13 +1310,6 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 		}
 
 		$this->tblCombinedRows = $array;
-
-		//echo '<pre>';
-
-		//print_r($array);
-
-		//echo '</pre>';
-	//	var_dump($array);
 
 	}
 
@@ -1143,8 +1686,6 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 			
 		);
 
-
-
 		$allowedposttags['button']     = $allowed_atts;
 		$allowedposttags['form']     = $allowed_atts;
 		$allowedposttags['label']    = $allowed_atts;
@@ -1191,25 +1732,6 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 
 	}
 	
-
-	function add_styles(){
-	   global $wp_locale, $wpmpg , $pagenow; 		
-	   wp_enqueue_script( 'jquery-ui-core' ); 
-	   wp_register_style('wpmpg_fontawesome', wpmpg_url.'admin/css/font-awesome/css/font-awesome.min.css');
-	   wp_enqueue_style('wpmpg_fontawesome');
-	   wp_register_style('wpmpg_admin', wpmpg_url.'admin/css/admin.css' , array(), '1.0.6', false);
-	   wp_enqueue_style('wpmpg_admin');
-
-	   wp_register_style('wpmpg_jqueryui', wpmpg_url.'admin/css/jquery-ui.css');
-	   wp_enqueue_style('wpmpg_jqueryui');
-
-	   wp_register_script( 'wpmpg_front_uploader', wpmpg_url.'vendors/plupload/js/plupload.full.min.js',array('jquery'),  null);
-	   wp_enqueue_script('wpmpg_front_uploader');
-
-	   wp_register_script( 'wpmpg_admin', wpmpg_url.'admin/scripts/admin.js', array( 
-		'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion );
-	   wp_enqueue_script( 'wpmpg_admin' );		  
-   }      
 
 
 	function admin_head(){
@@ -1354,22 +1876,14 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
 	}	
 	
 	
-	function admin_page() 
-	{
-		
-
-		
+	function admin_page() 	{	
 		
 		if (isset($_POST['wpmpg_update_settings']) ) {
             $this->update_settings();
         }
 		
-				
-		
-		
 			
-	?>
-	
+	?>	
 
 		<div class="wrap <?php echo $this->slug; ?>-admin"> 
 
@@ -1391,18 +1905,13 @@ $img_val = '<img class="test" alt="'.esc_attr($meta_alternative_text).'" src="'.
             ?>
         </span>
         Page Generator</span>
-</div>
-       
+</div>      
             
-                <h2 class="nav-tab-wrapper"><?php $this->admin_tabs(); ?>               
-                
-                 
-                
-                </h2>  
+                <h2 class="nav-tab-wrapper"><?php $this->admin_tabs(); ?>  </h2>  
   
             
 
-			<div class="<?php echo $this->slug; ?>-admin-contain">    
+			<div class="<?php echo $this->slug; ?>-admin-contain">   
             
                
 			

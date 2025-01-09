@@ -2,7 +2,7 @@
 /*
 Plugin Name: Mosaic Page Generator
 Description: Premium AI-powered location pages that boost rankings. Requires subscription with Direction.com
-Version: 1.1.8
+Version: 1.93
 Author: Direction.com
 */
 
@@ -19,8 +19,7 @@ $plugin = plugin_basename(__FILE__);
 require_once ('loader.php');
 register_activation_hook( __FILE__, 'wpmpg_activation'); 
 
-function  wpmpg_activation( $network_wide ) 
-{
+function  wpmpg_activation( $network_wide ) {
 	$plugin = "wp-mosaic-page-generator/index.php";
 	$plugin_path = '';	
 	

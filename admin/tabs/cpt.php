@@ -9,6 +9,7 @@ $auxCPF = new WpMosaicCPT();
 ?>
 
 <div class="wpmpg-welcome-panel">
+
     <div class="row item first uploader">
         <div class="col col-9 info mid">
             <div class="row label">Custom Post Types</div>
@@ -22,7 +23,6 @@ $auxCPF = new WpMosaicCPT();
 
 <div class="row post-types">
 
-<?php /* ?><div class="rownoflex getbwp-button-bart"></div><?php */ ?>
         
 <?php if (!empty($cptRows)){ ?>
       
@@ -85,6 +85,4 @@ $auxCPF = new WpMosaicCPT();
        
        </div>
    	
-</div>
-
-     
+</div>   

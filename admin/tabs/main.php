@@ -3,11 +3,6 @@ global $wpmpg;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-$url = 'https://docs.google.com/spreadsheets/d/1tmZY-m4dHjxyNhCQ4ki5wiFr3bzkWrTQEz-KbNAZhNA/edit?usp=sharing';
-$url = 'https://docs.google.com/spreadsheets/d/1tmZY-m4dHjxyNhCQ4ki5wiFr3bzkWrTQEz-KbNAZhNA/export?format=csv';
-
-//$wpmpg->import_from_url($url);
-
 $step = $_POST['step'] ?? 1;
 $is_submited = $_POST['is_submited'] ?? 0;
 $file_uploaded = $_POST['file_uploaded'] ?? '';
@@ -33,18 +28,9 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 
                         <?php echo $wpmpg->get_uploader_section();?>  
                     
-                    <div class="row in">
-                        <div class="col col-9 info">
-                        <div class="msrm-imp-options" id="msrm-imp-options">
-                            <div class="msrm-imp-options-sel wpm-upload-imp-op-bx" selected-opt="act_opt_create" id="act_opt_create_box">
-							    <div class="label"><?php _e('Select post type', 'wp-mosaic-page-generator'); ?></div>
-								<div class="field"><?php echo $wpmpg->get_all_c_postypes_list_box('wp-custom-post-type');?></div>
+                    <div class="row in">                  
 
-                            </div>
-                        </div>
-                        </div>
-
-                        <div class="col col-3 btm click">
+                        <div class="col col-9 btm click">
                             <div class="msm-btn-steps-bar" id="msm-btn-steps-bar">
                                 <button class="msrm-btnupload-options mb-1 mt-1 mr-1 btn btn-lg btn-primary btn-custom-primary" type="button" id="wmp-btn-submit"> <?php _e('Next', 'wp-mosaic-page-generator'); ?>
                                 </button>
@@ -73,6 +59,8 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 
 						<?php echo $wpmpg->build_data_table($_POST['file_uploaded']); ?> 	
 						
+
+						<a href="#" class="button button-large button-link-delete tools-action" id="rmcalculator"  class="rmcalculator" data-action="update_seo_score" data-confirm="false">Recalculate Scores</a>
 
 					</div>	
 					

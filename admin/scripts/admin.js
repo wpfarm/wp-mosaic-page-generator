@@ -1,6 +1,6 @@
 var $ = jQuery;
 let rtime = 4000;
-let mmrunningstatus = 1;
+let mmrunningstatus_mosaic = 1;
 
 let time = 0;
 let interval;
@@ -23,7 +23,7 @@ jQuery(document).ready(function($) {
     $(document).on("click", "#wmp-btn-start-import-submit", function() {  
         
         $("#step").val('3');                  
-        //$("#wmp-form").submit();     
+ 
         
         ms_build_links_array();
     });
@@ -64,11 +64,8 @@ jQuery(document).ready(function($) {
             }); 
         }
         e.preventDefault();         
-    });   
-
-
-    
-    
+    });     
+ 
     
     
  $(document).on("click", "#wpmsaic-download-from-url-btn", function() {   
@@ -90,14 +87,11 @@ jQuery(document).ready(function($) {
                     $("#wpmsaic-download-from-url-btn").addClass('on');
                 }
             });	
-            $("#msm-btn-steps-bar").slideDown(400);	                  
+            $("#wmp-form").submit();
+           // $("#msm-btn-steps-bar").slideDown(400);	                  
         }
     });      
-});
-    
-    
-    
-    
+});  
     
     
 
@@ -107,9 +101,9 @@ jQuery(document).ready(function($) {
 
 function ms_build_links_array (){ 
 
-      mmrunningstatus =1;
+    mmrunningstatus_mosaic =1;
     var progressbar = $( "#progressbar" ),
-        progressLabel = $( ".progress-label" );
+    progressLabel = $( ".progress-label" );
   
     $("#msearch_res").html('');
     $("#mm-title-status").html('Processing ... please wait.');
@@ -130,9 +124,9 @@ function ms_build_links_array (){
         }
     });
 
+    let selectedIDS = [];
     
     $("#wpm-import-opt-bar").hide();  
-
     $("#wpm-progress-bar").slideDown(400);   
     
     let index = 0;
@@ -141,7 +135,6 @@ function ms_build_links_array (){
     let last_row = 0;
     
     const loop = setInterval(() => {
-
         console.log('Total Rows: ' + total_rows);        
   
         $.ajax({
@@ -165,33 +158,32 @@ function ms_build_links_array (){
                     var processed_rows_flag =  parseFloat($("#last_row").val() ) +  parseFloat($("#batch").val());
                     
                     if(  processed_rows_flag > parseFloat(total_rows)){
-                      //  console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
-                       // clearInterval(loop) ;
-                        //$("#msm-btn-steps-bar-steps").hide(); 
-                        //$("#wpm-import-results-block").show();                    
+                                     
 
 
                     }
 
                     var total_p =  parseFloat(res.cut_to) + parseFloat(res.last);
+                    if(total_p>=total_rows){
+                        total_p = total_rows;
+                    }
+
                     $("#msrm-process-val").html(total_p);                   
                     mark_as_processed(total_p);                  
                     var percent_a = res.percent_a;
-                    progressbar.progressbar( "value",  percent_a );   
+                    progressbar.progressbar( "value",  percent_a ); 
+                    
+                    const postIds = res.postIDS;                                     
 
                     if(  percent_a >= 100){
                         console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
                         clearInterval(loop) ;
                         $("#msm-btn-steps-bar-steps").hide(); 
-                        $("#wpm-import-results-block").show();                    
+                        $("#wpm-import-results-block").show();                                           
+                       //rebuild RM score
+                       $('#rmcalculator').trigger('click'); 
 
-
-                    }
-                    
-                    
-
-
-                      
+                    }                         
                   }
         });       
         
@@ -199,13 +191,92 @@ function ms_build_links_array (){
   
 }
 
+// Function to process a single post with rankMathEditor
+function analyzePostWithEditor(postId, callback) {
+   
+    $.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        data: {
+            action: 'wpmpg_start_score_rebuild', // Custom PHP function
+            post_id: postId,
+        },
+        success: function (response) {
+            if (response.success) {
+
+                console.log('Rank Math', rankMathEditor)
+                const postData = response.data;
+                if (typeof rankMathEditor !== 'undefined') {
+                    // Inject post data into rankMathEditor
+                    rankMathEditor.data = {
+                        ...rankMathEditor.data,
+                        title: postData.title,
+                        content: postData.content,
+                        excerpt: postData.excerpt,
+                    };
+
+                    // Trigger analysis
+                    rankMathEditor.refresh();
+
+                    // Get analysis results
+                    const seoScore = rankMathEditor.getScore();
+                    const failedChecks = rankMathEditor.getFailed();
+
+                    // Pass the results to the callback function
+                    callback(null, {
+                        postId: postId,
+                        seoScore: seoScore,
+                        failedChecks: failedChecks,
+                    });
+                } else {
+                    callback('Rank Math Editor is not available');
+                }
+            } else {
+                callback(`Failed to fetch data for Post ID ${postId}`);
+            }
+        },
+        error: function () {
+            callback(`AJAX request failed for Post ID ${postId}`);
+        },
+    });
+}
+
+// Function to process a batch of post IDs with a delay
+function analyzePostsBatchWithDelay(postIds, delay = 1000) {
+    const results = [];
+    let currentIndex = 0;
+
+    function processNextPost() {
+        if (currentIndex >= postIds.length) {
+            console.log('Batch Analysis Complete:', results);
+            return;
+        }
+        const postId = postIds[currentIndex];
+        console.log(`Processing Post ID ${postId} (${currentIndex + 1}/${postIds.length})`);
+
+        analyzePostWithEditor(postId, function (error, result) {
+            if (error) {
+                console.error(`Post ID ${postId}:`, error);
+            } else {
+                console.log(`Post ID ${postId} Results:`, result);
+                results.push(result);
+            }
+
+            // Move to the next post after the delay
+            currentIndex++;
+            setTimeout(processNextPost, delay);
+        });
+    }
+
+    // Start processing the first post
+    processNextPost();
+}    
+
 function hide_values_table (field_values_clase){
     var checkbox_value = "";
     var i = 0;
-    $("."+field_values_clase).each(function () {	    
-     
+    $("."+field_values_clase).each(function () {  
         $(this).addClass('wpm-hide_body-table'); 
-        
     });   
 }
 
@@ -213,11 +284,7 @@ function hide_values_column (field_values_clase){
     var checkbox_value = "";
     var i = 0;
     $("."+field_values_clase).each(function () {	   
-     
         $(this).html('Pending ...'); 
-
-        
-        
     });   
 }
 
@@ -229,4 +296,3 @@ function mark_as_processed (to_val){
         i++;
     }  
 }
-

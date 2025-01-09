@@ -176,16 +176,14 @@ class  WpMosaicCPT extends wpmpgCommon {
                 'search_items' => $wpmpg->get_post_value('search_items'),
                 'not_found' => $wpmpg->get_post_value('not_found'),
                 'not_found_in_trash' => $wpmpg->get_post_value('not_found_in_trash'),
-                'parent_item_colon' => '');
-			
+                'parent_item_colon' => '');			
 						
 			
 			//we can create the membership				
 			$new_record = array('cpt_id' => NULL,	
 								'cpt_name' =>$wpmpg->get_post_value('cpt_name'),
 								'cpt_unique_key' =>$wpmpg->get_post_value('cpt_unique_key'),								
-								'cpt_properties' => json_encode( $projects_labels),
-								
+								'cpt_properties' => json_encode( $projects_labels),								
 									
 								);	
 								
@@ -329,9 +327,6 @@ class  WpMosaicCPT extends wpmpgCommon {
 		global $wpdb;
 		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			
 		$sql .= ' WHERE cpt_id = "'.(int)$id.'"' ;	
-
-
-
 				
 		$res = $wpdb->get_results($sql);		
 		if ( !empty( $res ) ){
