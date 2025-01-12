@@ -1,17 +1,13 @@
 <?php
-class wpmpgCommon
-{
+class wpmpgCommon{
 	var $wp_all_categories =  array();	
 	var $options ;	
-	public function __construct(){
-		
+	public function __construct(){		
 		$this->options = get_option('wpmpg_options');		
 	
 	}
 	
-	
-	function get_all_sytem_pages()
-	{
+	function get_all_sytem_pages()	{
 	    if($this->wp_all_pages === false)
 	    {
 	        $this->wp_all_pages[0] = "Select Page";
@@ -24,8 +20,7 @@ class wpmpgCommon
 	    return $this->wp_all_pages;
 	}
 	
-	function get_all_sytem_cagegories()
-	{
+	function get_all_sytem_cagegories(){
 		
 		
 		$args = array(
@@ -60,24 +55,18 @@ class wpmpgCommon
 	}
 	
 	// get value in admin option
-    function get_value($option_id) 
-	{
+    function get_value($option_id) {
 		
 		$this->options = get_option('wpmpg_options');
-
-
-        if (isset($this->options[$option_id]) && $this->options[$option_id] != '' ) 
-		{
+        if (isset($this->options[$option_id]) && $this->options[$option_id] != '' ) {
 			
-			if(is_string($this->options[$option_id])){
-				
+			if(is_string($this->options[$option_id])){				
 				 return stripslashes($this->options[$option_id]);
 			
 			}else{
 				
 				 return $this->options[$option_id];
-			}
-           
+			}          
 			
         } elseif (isset($this->bup_default_options[$option_id]) && $this->bup_default_options[$option_id] != '' ) {
             return stripslashes($this->bup_default_options[$option_id]);
@@ -102,7 +91,6 @@ class wpmpgCommon
         $value = $this->get_value($id);
 
         switch ($type) {
-
             case 'textarea':
                 print "<textarea name=\"$id\" type=\"text\" id=\"$id\" class=\"large-text code text-area uultra-setting-options-texarea\" rows=\"3\">$value</textarea>";
                 break;
@@ -177,8 +165,7 @@ class wpmpgCommon
 		
 		$qtip_classes = 'qtip-light ';
 
-        if($inline_help!='')
-        {
+        if($inline_help!='') {
             echo '<a class="'.$qtip_classes.' uultra-tooltip" title="' . $inline_help . '" '.$qtip_style.'><i class="fa fa-info-circle reg_tooltip"></i></a>';
         }
 
@@ -195,7 +182,6 @@ class wpmpgCommon
         }
         	
         echo "</td></tr>";
-
     }
 	
 	public static function check_box($property=array(),$selected='0') {
@@ -203,8 +189,7 @@ class wpmpgCommon
         	
         $checked='';
         
-        if(is_array($property))
-        {
+        if(is_array($property)) {
             foreach($property as $key=>$value)
             {
                 if($key == 'value' && trim($value) == trim($selected))
@@ -218,8 +203,7 @@ class wpmpgCommon
         return $chek_box;
     }
 	
-	function get_option($option) 
-	{
+	function get_option($option) {
 		$settings = get_option('wpmpg_options');
 		if (isset($settings[$option])) 
 		{
@@ -232,14 +216,10 @@ class wpmpgCommon
 		    
 	}
 	
-	public function fetch_result($results)
-	{
-		if ( empty( $results ) )
-		{
+	public function fetch_result($results){
+		if ( empty( $results ) ){		
 		
-		
-		}else{
-			
+		}else{			
 			
 			foreach ( $results as $result )
 			{

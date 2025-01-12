@@ -159,10 +159,7 @@ border-radius:.5em;
 .wpmpg-ultra-error {
 
     color: #D8000C;
-
     background-color: #FFBABA;
-
-
 }
 
 .wpmpg-ultra-wait {
@@ -184,8 +181,7 @@ border-radius:.5em;
 
 .wpmpg-ultra-success i{
 	font-size:18px;
-	margin:0px 5px 0px 0px
-   
+	margin:0px 5px 0px 0px  
 }
 
 .wpmpg-sect{
@@ -199,14 +195,12 @@ border-radius:.5em;
 }
 .wpmpg-ultra-warning {
     color: #666;
-    background-color: #ffcc002b;
-   
+    background-color: #ffcc002b;  
 }
 
 .wpmpg-ultra-warning i{
 	font-size:18px;
-	margin:0px 5px 0px 0px
-   
+	margin:0px 5px 0px 0px   
 }
 
 .wpmpg-ultra-error {
@@ -214,11 +208,6 @@ border-radius:.5em;
     background-color: #FFBABA;
    
 }
-
- 
-
-
-
 
 .gestclok-conf-message-details .nuva-check-ico-div i {
     font-size: 2.8rem;
