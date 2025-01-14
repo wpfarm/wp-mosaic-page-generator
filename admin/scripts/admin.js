@@ -1,30 +1,21 @@
 var $ = jQuery;
 let rtime = 4000;
 let mmrunningstatus_mosaic = 1;
-
 let time = 0;
 let interval;
 jQuery(document).ready(function($) {
-
-    "use strict"; 
-    
-    $(document).on("click", ".act_way_to_upload", function() {
-      
+    "use strict";     
+    $(document).on("click", ".act_way_to_upload", function() {      
         var selected_step =  $(this).attr("selected-opt");  
-        var _sel_val =$(this).val();       
-                 
+        var _sel_val =$(this).val();                        
     }); 
     
-    $(document).on("click", "#wmp-btn-submit", function() {     
-                  
+    $(document).on("click", "#wmp-btn-submit", function() {   
         $("#wmp-form").submit();               
     });
 
     $(document).on("click", "#wmp-btn-start-import-submit", function() {  
-        
         $("#step").val('3');                  
- 
-        
         ms_build_links_array();
     });
 
@@ -34,13 +25,13 @@ jQuery(document).ready(function($) {
         var acc_id = jQuery(this).attr("acc-id"); 
         doIt=confirm("Are you totally sure?");
 		if(doIt){                    
-            jQuery.ajax({
+            $.ajax({
                     type: 'POST',
                     url: ajaxurl,
                     data: {"action": "wpmpg_delete_cpf",
                            "acc_id": acc_id},
                     success: function(data){	
-                        jQuery("#acc-row-"+ acc_id).slideUp();
+                        $("#acc-row-"+ acc_id).slideUp();
                     }
             }); 
         }
@@ -50,57 +41,45 @@ jQuery(document).ready(function($) {
     $(document).on("click", ".wpmpg-int-delete-acc-val", function(e) {
         e.preventDefault();	 
         var doIt = false;
-        var acc_id = jQuery(this).attr("acc-id"); 
+        var acc_id = $(this).attr("acc-id"); 
         doIt=confirm("Are you totally sure?");
 		if(doIt){                    
-            jQuery.ajax({
+            $.ajax({
                     type: 'POST',
                     url: ajaxurl,
                     data: {"action": "wpmpg_delete_cpf_value",
                            "acc_id": acc_id},
                     success: function(data){	
-                        jQuery("#acc-row-"+ acc_id).slideUp();
+                        $("#acc-row-"+ acc_id).slideUp();
                     }
             }); 
         }
         e.preventDefault();         
-    });     
- 
-    
-    
- $(document).on("click", "#wpmsaic-download-from-url-btn", function() {   
-        
-    $.ajax({
-        type: 'POST',
-        url: ajaxurl,
-        data: {"action": "wpmpg_download_url_file", 
-               "link_to_download": $("#file_url").val()
-        },                       
-        success: function(data){
-            var res = jQuery.parseJSON(data);	                
-
-            $("#file_uploaded").val(res.image);
-            $("#msrm-imp-options").slideDown(400, function() {
-                // Check if the #msrm-imp-options container is set to display:block
-                if ($(this).css('display') === 'block') {
-                    // Add the "on" class after the container is displayed
-                    $("#wpmsaic-download-from-url-btn").addClass('on');
-                }
-            });	
-            $("#wmp-form").submit();
-           // $("#msm-btn-steps-bar").slideDown(400);	                  
-        }
     });      
-});  
     
-    
-
+    $(document).on("click", "#wpmsaic-download-from-url-btn", function() {          
+        $.ajax({
+            type: 'POST',
+            url: ajaxurl,
+            data: {"action": "wpmpg_download_url_file", 
+                "link_to_download": $("#file_url").val()
+            },                       
+            success: function(data){
+                var res = jQuery.parseJSON(data);	             
+                $("#file_uploaded").val(res.image);
+                $("#msrm-imp-options").slideDown(400, function() {
+                    if ($(this).css('display') === 'block') {
+                        $("#wpmsaic-download-from-url-btn").addClass('on');
+                    }
+                });	
+                $("#wmp-form").submit();                            
+            }
+        });      
+    });     
 	
 });
 
-
 function ms_build_links_array (){ 
-
     mmrunningstatus_mosaic =1;
     var progressbar = $( "#progressbar" ),
     progressLabel = $( ".progress-label" );
@@ -135,8 +114,7 @@ function ms_build_links_array (){
     let last_row = 0;
     
     const loop = setInterval(() => {
-        console.log('Total Rows: ' + total_rows);        
-  
+        console.log('Total Rows: ' + total_rows);       
         $.ajax({
             type: 'POST',
             url: ajaxurl,
@@ -144,25 +122,15 @@ function ms_build_links_array (){
                     "file_uploaded": $("#file_uploaded").val(),                  
                     "last": $("#last_row").val(),
                     "batch":$("#batch").val(),
-                    "wp-custom-post-type":$("#wp-custom-post-type").val(),
-                    
+                    "wp-custom-post-type":$("#wp-custom-post-type").val(),                    
                     },                       
                   success: function(data){
-
                     var res =jQuery.parseJSON(data);	
                     var from_row =  parseFloat($("#last_row").val()) + parseFloat($("#batch").val());
                     last_row = from_row;
-
                     $("#last_row").val(from_row);
 
-                    var processed_rows_flag =  parseFloat($("#last_row").val() ) +  parseFloat($("#batch").val());
-                    
-                    if(  processed_rows_flag > parseFloat(total_rows)){
-                                     
-
-
-                    }
-
+                    var processed_rows_flag =  parseFloat($("#last_row").val() ) +  parseFloat($("#batch").val());                
                     var total_p =  parseFloat(res.cut_to) + parseFloat(res.last);
                     if(total_p>=total_rows){
                         total_p = total_rows;
@@ -181,19 +149,17 @@ function ms_build_links_array (){
                         $("#msm-btn-steps-bar-steps").hide(); 
                         $("#wpm-import-results-block").show();                                           
                        //rebuild RM score
+                       $('.wpmg-seoscore').slideDown(400); 
                        $('#rmcalculator').trigger('click'); 
-
                     }                         
                   }
         });       
         
     }, rtime);	
-  
 }
 
 // Function to process a single post with rankMathEditor
-function analyzePostWithEditor(postId, callback) {
-   
+function analyzePostWithEditor(postId, callback) {   
     $.ajax({
         url: ajaxurl,
         type: 'POST',
@@ -203,7 +169,6 @@ function analyzePostWithEditor(postId, callback) {
         },
         success: function (response) {
             if (response.success) {
-
                 console.log('Rank Math', rankMathEditor)
                 const postData = response.data;
                 if (typeof rankMathEditor !== 'undefined') {
@@ -217,11 +182,9 @@ function analyzePostWithEditor(postId, callback) {
 
                     // Trigger analysis
                     rankMathEditor.refresh();
-
                     // Get analysis results
                     const seoScore = rankMathEditor.getScore();
                     const failedChecks = rankMathEditor.getFailed();
-
                     // Pass the results to the callback function
                     callback(null, {
                         postId: postId,
@@ -245,7 +208,6 @@ function analyzePostWithEditor(postId, callback) {
 function analyzePostsBatchWithDelay(postIds, delay = 1000) {
     const results = [];
     let currentIndex = 0;
-
     function processNextPost() {
         if (currentIndex >= postIds.length) {
             console.log('Batch Analysis Complete:', results);
@@ -253,7 +215,6 @@ function analyzePostsBatchWithDelay(postIds, delay = 1000) {
         }
         const postId = postIds[currentIndex];
         console.log(`Processing Post ID ${postId} (${currentIndex + 1}/${postIds.length})`);
-
         analyzePostWithEditor(postId, function (error, result) {
             if (error) {
                 console.error(`Post ID ${postId}:`, error);
@@ -261,13 +222,11 @@ function analyzePostsBatchWithDelay(postIds, delay = 1000) {
                 console.log(`Post ID ${postId} Results:`, result);
                 results.push(result);
             }
-
             // Move to the next post after the delay
             currentIndex++;
             setTimeout(processNextPost, delay);
         });
     }
-
     // Start processing the first post
     processNextPost();
 }    

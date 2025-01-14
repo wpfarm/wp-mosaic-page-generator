@@ -55,10 +55,9 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 				?>
 
 					<div class="msrm-panel wp-upload-opt">	
-
 						<?php echo $wpmpg->build_data_table($_POST['file_uploaded']); ?>
 						
-						<div class="rmcalculator">					
+						<div class="rmcalculator btn_update_score_ww">					
 
 							<a href="#" class="button button-large button-link-delete tools-action " id="rmcalculator"  data-action="update_seo_score" data-confirm="false">Recalculate Scores</a>
 						
@@ -78,7 +77,6 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 									<div class="progress-bar">
 										<span></span>
 									</div>
-
 									<div class="rank-math-modal-footer hidden">
 										<p>
 											<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'rank-math' ); ?>
@@ -88,8 +86,6 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 								</div>
 							</div>
 						</div>
-
-
 					</div>	
 					
 					
@@ -115,9 +111,6 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 
 
         </div>
-
-
-
 
 		</form>
         

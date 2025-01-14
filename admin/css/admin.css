@@ -294,6 +294,15 @@ border-radius:.5em;
 }
 .wpmpg-main-sales-summary ul li small{ font-size:1.2rem; color:#999 }
 
+.wpmg-seoscore{
+	display: none;
+}
+
+.btn_update_score_ww{
+	display: none;
+}
+
+
 
 
 
@@ -319,7 +328,7 @@ border-radius:.5em;
 .col.col-9 {width:75%;}
 
 .toplevel_page_wpmpg #wpcontent {padding-left: 0 !important;}
-.toplevel_page_wpmpg #wpfooter {margin-left: 0 !important;}
+.toplevel_page_wpmpg #wpfooter {margin-left: 0 !important; position: relative;}
 
 .row {display:table;width:100%;margin:auto;}
 

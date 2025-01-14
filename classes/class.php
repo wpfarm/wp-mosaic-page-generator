@@ -14,12 +14,14 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
-	var $mVersion = '1.92';
+	var $mVersion = '1.93';
 	public $allowed_html;
 	var $tblHeaders;	
 	var $tblRows;			
 	var $tblCombinedRows;
-	
+	var $slug;
+	var $plugin_data;
+	var $version;
 	/**
 	 * Screen object.
 	 *
@@ -34,8 +36,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 	public function __construct()	{	
 
-		$this->update_score = \RankMath\Tools\Update_Score::get();
-		
+		$this->update_score = \RankMath\Tools\Update_Score::get();		
 		
 		$this->slug = 'wpmpg';			
 		$this->ini_module();	
@@ -176,7 +177,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		</div>
 		<?php
 	}
-
 	
 	function add_styles(){
 		global $wp_locale, $wpmpg , $pagenow; 		
@@ -186,11 +186,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		wp_register_style('wpmpg_admin', wpmpg_url.'admin/css/admin.css' , array(), '1.0.6', false);		wp_enqueue_style('wpmpg_admin');
  
 		wp_register_style('wpmpg_jqueryui', wpmpg_url.'admin/css/jquery-ui.css');
-		wp_enqueue_style('wpmpg_jqueryui');
- 
+		wp_enqueue_style('wpmpg_jqueryui'); 
 		wp_register_script( 'wpmpg_front_uploader', wpmpg_url.'vendors/plupload/js/plupload.full.min.js',array('jquery'),  null);
-		wp_enqueue_script('wpmpg_front_uploader');
- 
+		wp_enqueue_script('wpmpg_front_uploader'); 
 		wp_register_script( 'wpmpg_admin', wpmpg_url.'admin/scripts/admin.js', array( 
 		 'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion, true );
 		wp_enqueue_script( 'wpmpg_admin' );		  
