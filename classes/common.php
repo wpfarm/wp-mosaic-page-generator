@@ -20,8 +20,7 @@ class wpmpgCommon{
 	    return $this->wp_all_pages;
 	}
 	
-	function get_all_sytem_cagegories(){
-		
+	function get_all_sytem_cagegories(){		
 		
 		$args = array(
 			'type'                     => 'post',
@@ -39,17 +38,12 @@ class wpmpgCommon{
 		
 		); 
 
-		
 		$categories = get_categories($args); 
-
-
 	    
-	        $this->wp_all_categories[0] = "Select Category";
-	        foreach($categories as $category)
-	        {
-	            $this->wp_all_categories[$category->cat_ID] = $category->cat_name;
-	        }
-	    
+		$this->wp_all_categories[0] = "Select Category";
+		foreach($categories as $category){
+			$this->wp_all_categories[$category->cat_ID] = $category->cat_name;
+		}    
 	    
 	    return $this->wp_all_categories;
 	}
@@ -75,7 +69,7 @@ class wpmpgCommon{
         }
     }
 
-		// add setting field
+	// add setting field
     function create_plugin_setting($type, $id, $label, $pairs, $help, $inline_help = '', $extra=null) {
 		
 		global  $wpmpg;
@@ -97,8 +91,6 @@ class wpmpgCommon{
 			
 			  case 'textarearich':
 			  
-              /*  print "<textarea name=\"$id\" type=\"text\" id=\"$id\" class=\"large-text code text-area uultra-setting-options-texarea\" rows=\"3\">$value</textarea>";*/
-				
 				$html = $wpmpg->get_me_wphtml_editor($id, $value);
 				
 				print $html;
@@ -144,9 +136,7 @@ class wpmpgCommon{
 				
 			case 'checkbox_list':
                 $selected_roles = $value;
-                $default_role = get_option("default_role");
-
-                
+                $default_role = get_option("default_role");                
                 foreach ($pairs as $role_key => $role) {
                     if($default_role == $role_key){
                         echo $this->check_box(array('name' => $id.'[]', 'id' => $id, 'value' => $role_key,'checked'=>'checked','disabled'=>'disabled')).$role.'<br/>';            
@@ -160,7 +150,6 @@ class wpmpgCommon{
                     
                 }
                 break;
-
         }
 		
 		$qtip_classes = 'qtip-light ';
@@ -179,19 +168,16 @@ class wpmpgCommon{
                 echo $a;
             }
             echo "</div>";
-        }
-        	
+        }        	
         echo "</td></tr>";
     }
 	
 	public static function check_box($property=array(),$selected='0') {
         $chek_box='<input type="checkbox"';
         	
-        $checked='';
-        
+        $checked='';        
         if(is_array($property)) {
-            foreach($property as $key=>$value)
-            {
+            foreach($property as $key=>$value) {
                 if($key == 'value' && trim($value) == trim($selected))
                     $checked=' checked="checked"';
             
@@ -212,8 +198,7 @@ class wpmpgCommon{
 		}else{
 			
 		    return '';
-		}
-		    
+		}		    
 	}
 	
 	public function fetch_result($results){
@@ -221,20 +206,15 @@ class wpmpgCommon{
 		
 		}else{			
 			
-			foreach ( $results as $result )
-			{
+			foreach ( $results as $result )	{
 				return $result;			
 			
-			}
-			
-		}
-		
+			}			
+		}		
 	}
-
 	
 	/* Predefined arrays/listings */
-	public function get_predifined($filter) 
-	{
+	public function get_predifined($filter) {
 		$array = array();
 	    
 		switch($filter) {
@@ -583,9 +563,7 @@ class wpmpgCommon{
 				  '97'  => '97',
 				  '98'  => '98',
 				  '99'  => '99',
-				  '100'  => '100',
-				  
-				  
+				  '100'  => '100',		  
 				   	  
 				  
 				  );
@@ -593,10 +571,8 @@ class wpmpgCommon{
 				
 				break;
 				
-		}
-		
-		return $array;
-	
+		}		
+		return $array;	
 	}
 	
 	function get_select_value($from,$to){
@@ -607,7 +583,6 @@ class wpmpgCommon{
 		} 
 		
 		return $html;		
-	
 	}
 	
 	/**
@@ -617,8 +592,7 @@ class wpmpgCommon{
 	 * @param integer $seconds Number of seconds to parse
 	 * @return array
 	 */
-	function secondsToTime($seconds)
-	{
+	function secondsToTime($seconds){
 		// extract hours
 		$hours = floor($seconds / (60 * 60));
 	
@@ -637,7 +611,6 @@ class wpmpgCommon{
 			"s" => (int) $seconds,
 		);
 		return $obj;
-	}
-	
+	}	
 }
 ?>

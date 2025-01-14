@@ -5,7 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 $step = $_POST['step'] ?? 1;
 $is_submited = $_POST['is_submited'] ?? 0;
 $file_uploaded = $_POST['file_uploaded'] ?? '';
-
 ?>
 
 <div class="wpmpg-welcome-panel">              
@@ -67,19 +66,21 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 						<div class="rank-math-modal rank-math-modal-update-score wpmg-seoscore">
 							<div class="rank-math-modal-content">
 								<div class="rank-math-modal-header">
-									<h3><?php esc_html_e( 'Recalculating SEO Scores', 'rank-math' ); ?></h3>
-									<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'rank-math' ); ?></p>
+									<h3><?php esc_html_e( 'Recalculating SEO Scores', 'wp-mosaic-page-generator' ); ?></h3>
+									<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'wp-mosaic-page-generator' ); ?></p>
 								</div>
 								<div class="rank-math-modal-body">
-									<div class="count">
-										<?php esc_html_e( 'Calculated:', 'rank-math' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total" id="update-posts-total"><?php echo $wpmpg->update_score->find(true)?></span>
-									</div>
+
+								    <?php if (is_plugin_active('seo-by-rank-math/rank-math.php')) {?>
+										<div class="count">
+										</div>
+									<?php }	?>
 									<div class="progress-bar">
 										<span></span>
 									</div>
 									<div class="rank-math-modal-footer hidden">
 										<p>
-											<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'rank-math' ); ?>
+											<?php esc_html_e('The SEO Scores have been recalculated successfully!', 'wp-mosaic-page-generator' ); ?>
 										</p>
 										
 									</div>

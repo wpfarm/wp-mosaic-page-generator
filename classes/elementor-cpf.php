@@ -3,16 +3,14 @@ use Elementor\Core\DynamicTags\Tag;
 use Elementor\Controls_Manager;
 use Elementor\Repeater;
 
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
-    // Define the meta keys and display titles
 
     global $wpdb;	
     $custom_fields = getAllCustomFieldsMosaic();
 
-    foreach ( $custom_fields as $field  ) {      
+    foreach ( $custom_fields as $field  ) {     
 
         $meta_key = $field->cpf_field_name;
         $title = $field->cpf_field_label;
@@ -49,7 +47,7 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
                         if ( ! empty( \$value ) ) {
                             echo  \$value;
                         } else {
-                            //echo __( 'No meta value found', 'your-textdomain' );
+                            //echo __( 'No meta value found', 'wp-mosaic-page-generato' );
                         }
                     }
                 }
@@ -82,8 +80,6 @@ function getAllCustomFieldsMosaic()   {
     $sql .= " WHERE cpt.cpt_id = cpf.cpf_cpt_id    ";	
     $sql .= " ORDER BY  cpf.cpf_field_sorting ";	
     $sql = $wpdb->prepare($sql);
-    //echo $sql;
     $cptRows = $wpdb->get_results($sql );
     return $cptRows ;
-
 }

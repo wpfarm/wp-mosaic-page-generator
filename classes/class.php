@@ -34,9 +34,16 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	 */
 	const PREFIX = 'rank-math-';
 
-	public function __construct()	{	
+	public function __construct()	{
+		
+		// Ensure WordPress function for checking plugins is available
+		if (!function_exists('is_plugin_active')) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
 
-		$this->update_score = \RankMath\Tools\Update_Score::get();		
+		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
+			$this->update_score = \RankMath\Tools\Update_Score::get();			
+		}
 		
 		$this->slug = 'wpmpg';			
 		$this->ini_module();	
@@ -47,8 +54,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$this->version = $this->plugin_data['Version'];		
 		add_action('admin_menu', array(&$this, 'add_menu'), 11);
 		add_action('admin_head', array(&$this, 'admin_head'), 13 );
-		add_action('admin_init', array(&$this, 'admin_init'), 15);			
-		
+		add_action('admin_init', array(&$this, 'admin_init'), 15);	
 		add_action('add_meta_boxes', array($this, 'post_add_meta_box' ));	
 		add_action('init', array($this, 'ini_group_modules_pro'));	
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_upload_file',  array( $this, 'upload_file_parse' ));
@@ -58,7 +64,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf_value',  array( $this, 'delete_cpf_value' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_score_rebuild',  array( $this, 'get_post_data_for_analysis' ));
 		add_action('save_post',  array( &$this, 'update_cpt_details' ), 94);
-		add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);
+
+		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
+			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);
+		}
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
     }
 
@@ -155,12 +164,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		<div class="rank-math-modal rank-math-modal-update-score">
 			<div class="rank-math-modal-content">
 				<div class="rank-math-modal-header">
-					<h3><?php esc_html_e( 'Recalculating SEO Scores', 'rank-math' ); ?></h3>
-					<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'rank-math' ); ?></p>
+					<h3><?php esc_html_e( 'Recalculating SEO Scores', 'wp-mosaic-page-generato' ); ?></h3>
+					<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'wp-mosaic-page-generato' ); ?></p>
 				</div>
 				<div class="rank-math-modal-body">
 					<div class="count">
-						<?php esc_html_e( 'Calculated:', 'rank-math' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total"><?php echo esc_html( $this->find() ); ?></span>
+						<?php esc_html_e( 'Calculated:', 'wp-mosaic-page-generato' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total"><?php echo esc_html( $this->find() ); ?></span>
 					</div>
 					<div class="progress-bar">
 						<span></span>
@@ -168,9 +177,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 					<div class="rank-math-modal-footer hidden">
 						<p>
-							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'rank-math' ); ?>
+							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'wp-mosaic-page-generato' ); ?>
 						</p>
-						<button class="button button-large rank-math-modal-close"><?php esc_html_e( 'Close', 'rank-math' ); ?></button>
+						<button class="button button-large rank-math-modal-close"><?php esc_html_e( 'Close', 'wp-mosaic-page-generato' ); ?></button>
 					</div>
 				</div>
 			</div>
@@ -485,7 +494,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$rowCount++;			
 			$meta_input = array();		
 
-			//create post					
+			//get user id					
 			$user_id = get_current_user_id();
 				
 			// Create post object
@@ -496,22 +505,18 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				'post_name'  => $post_slug,			
 				'post_status'   => 'publish',
 				'post_author'   => $user_id,
-				'post_type'   => $post_type	,				
+				'post_type'   => $post_type	,			
 			
 			);
 
 			$post_exists = $this->the_slug_exists($post_slug, $post_type);	
 
 			if(!$post_exists){
-
 				// Insert the post into the database
 				$update_post = false;
-				$post_id = wp_insert_post( $my_post );	
-				
+				$post_id = wp_insert_post( $my_post );				
 
 			}else{
-
-				//echo "update post ";
 				$post = $this->get_post_id_by_slug($post_slug, $post_type);
 				$post_id = $post[0]->ID;
 				$update_post = true;
@@ -523,14 +528,14 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 				);
 				wp_update_post( $my_post ); 
-
-				//echo "update post 2";
 			}					
 						
 			update_post_meta( $post_id, '_yoast_wpseo_title',$post_title );
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc',$meta_desc );
 			update_post_meta( $post_id, '_yoast_wpseo_focuskw',$post_title );
-			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );            
+			update_post_meta( $post_id, 'description_wpmosaic',$meta_desc );  
+			
+			//rank math data
 			update_post_meta( $post_id, 'rank_math_title',$rank_math_title );            
 			update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
 			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
@@ -539,7 +544,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			//$this->get_or_save_rank_math_seo_score($post_id);
 		
-			$i = 6;			
+			$i = 6;	// custom meta fields starts
 			foreach ( $only_metas  as $meta_key ) {
 
 				$val_import = $rowsDATA[$count][$i] ?? '';
@@ -547,14 +552,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				if(isset( $fields_type_col[$meta_key])) { //if there is a custom field for this post type				
 
 					$custom_field = $fields_type_col[$meta_key];
-					if($custom_field['cpf_field_type']==1){ //text
-						
+					if($custom_field['cpf_field_type']==1){ //text					
 
 						update_post_meta( $post_id, $meta_key,$val_import );
 
-					}else{ //image		
-
-						//echo "Flag 55 ";
+					}else{ //image	
 							
 						$meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
 						
@@ -575,14 +577,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						//echo "Flag 56 ";
 						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
 
-					
 						if($attach_id!=''){
 
 							$thumb_url = wp_get_attachment_url($attach_id);
 							// Update this line to include the alt attribute
 						    $img_val = '<img class="test" alt="'.esc_attr($meta_text).'" src="'.$thumb_url.'">';                       
 						    update_post_meta( $post_id, $meta_key,$img_val );
-						   // update_post_meta( $post_id, '_wp_attachment_image_alt', $meta_text );
 
 							// Set the image Alt-Text
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
@@ -595,10 +595,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 							// Set the image meta (e.g. Title, Excerpt, Content)
 							wp_update_post( $my_image_meta );
-						}					
-
+						}		
 					}				
-					
 				}				
 					
 				$i++;
@@ -622,7 +620,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();				
 	
 	}
-
 
 	function get_post_data_for_analysis() {
 		if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {
@@ -658,13 +655,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			'args[update_all_scores]' => '1',
 		]);
 
-		$res = $this->make_post_request($url, $data);
-		echo "Update scores ID: ".$res;		
+		$res = $this->make_post_request($url, $data);		
 
 		//update scores by using the RankMath API
-
-
-
 	}
 
 	function get_or_save_rank_math_seo_score($post_id) {
@@ -682,7 +675,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			
 			// If not, calculate and save it
 			if (empty($seo_score) && function_exists('rank_math')) {
-
 
 				$body = json_encode([
 					'key1' => 'value1',

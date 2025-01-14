@@ -82,8 +82,7 @@ jQuery(document).ready(function($) {
 function ms_build_links_array (){ 
     mmrunningstatus_mosaic =1;
     var progressbar = $( "#progressbar" ),
-    progressLabel = $( ".progress-label" );
-  
+    progressLabel = $( ".progress-label" );  
     $("#msearch_res").html('');
     $("#mm-title-status").html('Processing ... please wait.');
     $("#cancel-replace-process").html('CANCEL');    
