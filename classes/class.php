@@ -5,7 +5,6 @@ use RankMath\Traits\Hooker;
 use RankMath\Paper\Paper;
 use RankMath\Admin\Metabox\Screen;
 use RankMath\Schema\DB;
-
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
 	public $classes_array = array();	
@@ -34,7 +33,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	 */
 	const PREFIX = 'rank-math-';
 
-	public function __construct()	{
+	public function __construct()	{		
+
+		// Hook the filter during class initialization
+		add_filter('rank_math/recalculate_scores_batch_size',array(&$this, 'set_batch_size'));
 		
 		// Ensure WordPress function for checking plugins is available
 		if (!function_exists('is_plugin_active')) {
@@ -67,7 +69,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);
-		}
+
+			
+		}		
+
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
     }
 
@@ -94,8 +99,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		// Load only on specific admin pages
 		if ('toplevel_page_wpmpg' === $hook) {	
 
-			$this->update_score->enqueue();
+			//$this->update_score->batch_size= 50;
 
+			$this->update_score->enqueue();
 			$js     = rank_math()->plugin_url() . 'assets/admin/js/';
 			$css    = rank_math()->plugin_url() . 'assets/admin/css/';
 
@@ -122,13 +128,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			'post_type'      => 'any',   // Include all public post types
 			'posts_per_page' => -1,      // Fetch all posts
 			'fields'         => 'ids',  // Fetch only IDs for efficiency
-		);
-		
+		);		
 		$query = new WP_Query($args);
 		$total_posts = $query->found_posts; // Total posts across all post types
 		wp_reset_postdata();
-		return $total_posts;		
-		
+		return $total_posts;	
 	}
 
 	/**
@@ -140,6 +144,16 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	/**
+     * Set custom batch size for recalculating scores.
+     *
+     * @param int $batch_size The default batch size.
+     * @return int The modified batch size.
+     */
+    public function set_batch_size($batch_size) {
+        return 50; // Set your desired batch size, e.g., 50
+    }
+
+	/**
 	 * Get post types.
 	 *
 	 * @return array
@@ -149,7 +163,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		if ( isset( $post_types['attachment'] ) ) {
 			unset( $post_types['attachment'] );
 		}
-
 		return array_keys( $post_types );
 	}
 

@@ -9,13 +9,11 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 	$cpt_id = sanitize_text_field($_GET['id']);	
 	$cpt = $auxNewPCT->get_one($cpt_id);
     $cpt_att = json_decode($cpt->cpt_properties);
-    //print_r($cpt_att);
    
     if(!isset($cpt->cpt_id)){
         echo 'error';
         exit;
-    }
- 
+    } 
 
 }else{ 
 	
@@ -24,10 +22,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
   exit;	
 	
 }
-
-
-
-
 $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
         
 ?>
@@ -69,7 +63,7 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
            
            <?php 
            $i = 1;
-           foreach($cptRows as $cpt) {     
+           foreach($cptRows as $cpt) {    
             
             $cp_type = ($cpt->cpf_field_type==1) ? 'Text' : 'Image';
               

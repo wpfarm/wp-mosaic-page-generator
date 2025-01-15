@@ -75,8 +75,7 @@ jQuery(document).ready(function($) {
                 $("#wmp-form").submit();                            
             }
         });      
-    });     
-	
+    });    
 });
 
 function ms_build_links_array (){ 
@@ -102,11 +101,9 @@ function ms_build_links_array (){
         }
     });
 
-    let selectedIDS = [];
-    
+    let selectedIDS = [];    
     $("#wpm-import-opt-bar").hide();  
-    $("#wpm-progress-bar").slideDown(400);   
-    
+    $("#wpm-progress-bar").slideDown(400);       
     let index = 0;
     let total_rows = $("#wp-total-rows ").val();
     let status_process = 1;
@@ -128,22 +125,19 @@ function ms_build_links_array (){
                     var from_row =  parseFloat($("#last_row").val()) + parseFloat($("#batch").val());
                     last_row = from_row;
                     $("#last_row").val(from_row);
-
                     var processed_rows_flag =  parseFloat($("#last_row").val() ) +  parseFloat($("#batch").val());                
                     var total_p =  parseFloat(res.cut_to) + parseFloat(res.last);
                     if(total_p>=total_rows){
                         total_p = total_rows;
                     }
-
                     $("#msrm-process-val").html(total_p);                   
                     mark_as_processed(total_p);                  
                     var percent_a = res.percent_a;
-                    progressbar.progressbar( "value",  percent_a ); 
-                    
+                    progressbar.progressbar( "value",  percent_a );                     
                     const postIds = res.postIDS;                                     
 
                     if(  percent_a >= 100){
-                        console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
+                        //console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
                         clearInterval(loop) ;
                         $("#msm-btn-steps-bar-steps").hide(); 
                         $("#wpm-import-results-block").show();                                           

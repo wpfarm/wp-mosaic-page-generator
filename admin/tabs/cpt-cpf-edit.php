@@ -4,12 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 $auxNewPCT = new WpMosaicCPT();  
 
-
 if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){	
 	$cpt_id = sanitize_text_field($_GET['cpt_id']);	
 	$cpt = $auxNewPCT->get_one($cpt_id);
     $cpt_att = json_decode($cpt->cpt_properties);
-    //print_r($cpt_att);
    
     if(!isset($cpt->cpt_id)){
         echo 'error';
@@ -20,7 +18,6 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
     $cpf_id = sanitize_text_field($_GET['cpf_id']);	
 	$cpf = $auxNewPCT->get_one_cpf($cpf_id);
  
-
 }else{ 
 	
   $message =  '<div class="wpmpg-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
@@ -28,8 +25,6 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
   exit;	
 	
 }
-
-
 
 ?>
 
@@ -51,10 +46,8 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
 <input type="hidden" name="wpmpg_edit_cpt_cpf"  value="wpmpg_edit_cpt_cpf"/>
 <input type="hidden" name="cpf_cpt_id"  id="cpf_cpt_id"  value="<?php echo $cpt_id ?>"/>
 <input type="hidden" name="cpf_id"  id="cpf_id"  value="<?php echo $cpf_id ?>"/>
- 
 
 <?php wp_nonce_field( 'update_settings', 'wpmpg_nonce_check' ); ?>
-
     <table width="100%" class="">                      
         <tbody>   
             
@@ -65,8 +58,7 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
                     <option value="2" <?php if($cpf->cpf_field_type == 2) {echo 'selected="selected"';}; ?>><?php _e('Image', 'wp-mosaic-page-generator'); ?></option>
             
                  </select> </td>        
-            </tr> 
-            
+            </tr>             
         
             <tr>
                 <td class="wpmpg-colval"><?php _e('Field Label', 'wp-mosaic-page-generator'); ?></td>

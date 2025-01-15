@@ -2,10 +2,8 @@
 global $wpmpg;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
 $cptRows = $wpmpg->get_all_post_types();
-$auxCPF = new WpMosaicCPT();
-        
+$auxCPF = new WpMosaicCPT();        
 ?>
 
 <div class="wpmpg-welcome-panel">
@@ -21,9 +19,7 @@ $auxCPF = new WpMosaicCPT();
     </div>
 
 
-<div class="row post-types">
-
-        
+<div class="row post-types">        
 <?php if (!empty($cptRows)){ ?>
       
           <table width="100%" class="wp-list-table widefat fixed posts table-generic">
@@ -64,10 +60,8 @@ $auxCPF = new WpMosaicCPT();
                        
                     
 
-                   </td>
-                  
-               </tr>
-               
+                   </td>                  
+               </tr>               
                
                <?php
 
@@ -80,9 +74,6 @@ $auxCPF = new WpMosaicCPT();
            <?php	} ?>
 
            </tbody>
-       </table>
-       
-       
+       </table>      
        </div>
-   	
 </div>   

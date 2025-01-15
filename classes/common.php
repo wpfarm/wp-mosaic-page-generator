@@ -3,25 +3,20 @@ class wpmpgCommon{
 	var $wp_all_categories =  array();	
 	var $options ;	
 	public function __construct(){		
-		$this->options = get_option('wpmpg_options');		
-	
+		$this->options = get_option('wpmpg_options');	
 	}
 	
 	function get_all_sytem_pages()	{
-	    if($this->wp_all_pages === false)
-	    {
+	    if($this->wp_all_pages === false) {
 	        $this->wp_all_pages[0] = "Select Page";
-	        foreach(get_pages() as $key=>$value)
-	        {
+	        foreach(get_pages() as $key=>$value) {
 	            $this->wp_all_pages[$value->ID] = $value->post_title;
 	        }
-	    }
-	    
+	    }	    
 	    return $this->wp_all_pages;
 	}
 	
 	function get_all_sytem_cagegories(){		
-		
 		$args = array(
 			'type'                     => 'post',
 			'child_of'                 => 0,
@@ -38,8 +33,7 @@ class wpmpgCommon{
 		
 		); 
 
-		$categories = get_categories($args); 
-	    
+		$categories = get_categories($args); 	    
 		$this->wp_all_categories[0] = "Select Category";
 		foreach($categories as $category){
 			$this->wp_all_categories[$category->cat_ID] = $category->cat_name;
@@ -49,19 +43,14 @@ class wpmpgCommon{
 	}
 	
 	// get value in admin option
-    function get_value($option_id) {
-		
+    function get_value($option_id) {		
 		$this->options = get_option('wpmpg_options');
-        if (isset($this->options[$option_id]) && $this->options[$option_id] != '' ) {
-			
+        if (isset($this->options[$option_id]) && $this->options[$option_id] != '' ) {			
 			if(is_string($this->options[$option_id])){				
-				 return stripslashes($this->options[$option_id]);
-			
-			}else{
-				
+				 return stripslashes($this->options[$option_id]);			
+			}else{				
 				 return $this->options[$option_id];
-			}          
-			
+			}         
         } elseif (isset($this->bup_default_options[$option_id]) && $this->bup_default_options[$option_id] != '' ) {
             return stripslashes($this->bup_default_options[$option_id]);
         } else {
@@ -71,7 +60,6 @@ class wpmpgCommon{
 
 	// add setting field
     function create_plugin_setting($type, $id, $label, $pairs, $help, $inline_help = '', $extra=null) {
-		
 		global  $wpmpg;
 		$qtip_style = '';
 
@@ -80,35 +68,26 @@ class wpmpgCommon{
         <th scope=\"row\"><label for=\"$id\">$label</label></th>
         <td>";
         $input_html = '';
-
         $value = '';
         $value = $this->get_value($id);
-
         switch ($type) {
             case 'textarea':
                 print "<textarea name=\"$id\" type=\"text\" id=\"$id\" class=\"large-text code text-area uultra-setting-options-texarea\" rows=\"3\">$value</textarea>";
-                break;
-			
-			  case 'textarearich':
-			  
-				$html = $wpmpg->get_me_wphtml_editor($id, $value);
-				
-				print $html;
-				
+                break;			
+			  case 'textarearich':			  
+				$html = $wpmpg->get_me_wphtml_editor($id, $value);				
+				print $html;				
                 break;
 
             case 'input':
                 print "<input name=\"$id\" type=\"text\" id=\"$id\" value=\"$value\" class=\"regular-text\" />";
                 break;
-
             case 'select':
                 print "<select name=\"$id\" id=\"$id\">";
                 foreach($pairs as $k => $v) {
-
                     if (is_array($v)) {
                         $v = $v['name'];
                     }
-
                     echo '<option value="'.$k.'"';
                     if (isset($this->options[$id]) && $k == $this->options[$id]) {
                         echo ' selected="selected"';
@@ -120,7 +99,6 @@ class wpmpgCommon{
                 }
                 print "</select>";
                 break;
-
             case 'checkbox':
                 $checked='';
                 if('1' == $value)
@@ -132,8 +110,7 @@ class wpmpgCommon{
             case 'color':
                 $default_color = $this->defaults[$id];
                 print "<input name=\"$id\" type=\"text\" id=\"$id\" value=\"$value\" class=\"my-color-field\" data-default-color=\"$default_color\" />";
-                break;
-				
+                break;				
 			case 'checkbox_list':
                 $selected_roles = $value;
                 $default_role = get_option("default_role");                
@@ -146,18 +123,15 @@ class wpmpgCommon{
                             $checked_value = $role_key;
                         }
                         echo $this->check_box(array('name' => $id.'[]', 'id' => $id, 'value' => $role_key),$checked_value).$role.'<br/>';            
-                    }
-                    
+                    }                    
                 }
                 break;
         }
 		
 		$qtip_classes = 'qtip-light ';
-
         if($inline_help!='') {
             echo '<a class="'.$qtip_classes.' uultra-tooltip" title="' . $inline_help . '" '.$qtip_style.'><i class="fa fa-info-circle reg_tooltip"></i></a>';
         }
-
 
         if ($help)
             echo "<p class=\"description\">$help</p>";
@@ -191,12 +165,9 @@ class wpmpgCommon{
 	
 	function get_option($option) {
 		$settings = get_option('wpmpg_options');
-		if (isset($settings[$option])) 
-		{
-			return $settings[$option];
-			
-		}else{
-			
+		if (isset($settings[$option])){
+			return $settings[$option];			
+		}else{			
 		    return '';
 		}		    
 	}
@@ -204,21 +175,17 @@ class wpmpgCommon{
 	public function fetch_result($results){
 		if ( empty( $results ) ){		
 		
-		}else{			
-			
+		}else{		
 			foreach ( $results as $result )	{
-				return $result;			
-			
+				return $result;		
 			}			
 		}		
 	}
 	
 	/* Predefined arrays/listings */
 	public function get_predifined($filter) {
-		$array = array();
-	    
-		switch($filter) {
-			
+		$array = array();	    
+		switch($filter) {			
 			case 'countries':
 				$array = array (
 				  '0'  => '',
@@ -576,12 +543,10 @@ class wpmpgCommon{
 	}
 	
 	function get_select_value($from,$to){
-		$html ='';
-		
+		$html ='';		
 		for ($x = $from; $x <= $to; $x++){
    		 	$html .= '<option value="'.$x.'">'.$x.'</option>';
-		} 
-		
+		} 		
 		return $html;		
 	}
 	

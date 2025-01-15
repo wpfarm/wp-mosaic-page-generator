@@ -3,7 +3,6 @@ global $wpmpg;
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 $auxNewPCT = new WpMosaicCPT();        
 ?>
-
 <div class="wpmpg-welcome-panel">
 
     <div class="row item first uploader">
@@ -13,19 +12,14 @@ $auxNewPCT = new WpMosaicCPT();
         </div>
         <div class="col col-3 click">
         </div>
-    </div>    
-    
-
-
+    </div>   
 <?php echo wp_kses($auxNewPCT->get_errors(), $wpmpg->allowed_html);?> 
 <?php echo wp_kses($auxNewPCT->sucess_message, $wpmpg->allowed_html);?> 
 
 <div class="row edit-fields">
 <form method="post" action="">
 <input type="hidden" name="wpmpg_create_cpt"  value="wpmpg_create_cpt"/>
-
 <?php wp_nonce_field( 'update_settings', 'wpmpg_nonce_check' ); ?>
-
     <table width="100%" class="">                      
         <tbody>          
             <tr>
@@ -41,8 +35,6 @@ $auxNewPCT = new WpMosaicCPT();
     </table>
 
     <h2><?php _e('Labels', 'wp-mosaic-page-generator'); ?> </h2>
-
-
     <table width="100%" class="">                      
         <tbody>          
             <tr>
@@ -91,12 +83,9 @@ $auxNewPCT = new WpMosaicCPT();
             </tr>
         </tbody>
     </table>
-
     <p class="submit">
 	<input type="submit" name="submit" id="submit" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
-</p>
-
-   	
+</p>   	
 </div>
 </form>
 </div>
