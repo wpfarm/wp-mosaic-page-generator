@@ -1,15 +1,11 @@
 <?php
 class  WpMosaicCPT extends wpmpgCommon {
-
     var $ajax_prefix = 'wpmpg';
     var $errors = array();
-
 	var $sucess_message = '';
 
 	public function __construct(){
-
-		$this->handle_init_a();
-       
+		$this->handle_init_a();       
     }	
 
 
@@ -33,8 +29,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 		
 	}
 
-	function handle_update_cpf(){	
-		
+	function handle_update_cpf(){			
 		global $wpmpg, $wpdb;		
 		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
@@ -62,15 +57,11 @@ class  WpMosaicCPT extends wpmpgCommon {
 			
 			$data_where = array('cpf_id' => $wpmpg->get_post_value('cpf_id'));
 			$wpdb->update( $wpdb->prefix .'cpt_fields',  $record, $data_where );
-
 			$this->sucess_message = '<div class="wpmpg-ultra-success"><span><i class="fa fa-check"></i>'.__("The post field was successfully updated.",'wp-mosaic-page-generator').'</span></div>';
-		
 		}
-	
 	}
 
 	function handle_creation_cpf(){	
-		
 		global $wpmpg, $wpdb;		
 		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
@@ -97,21 +88,14 @@ class  WpMosaicCPT extends wpmpgCommon {
                 'cpf_field_label' => $wpmpg->get_post_value('cpf_field_label'),
                 'cpf_field_name' =>$wpmpg->get_post_value('cpf_field_name'),
                 'cpf_field_default_value' => $wpmpg->get_post_value('cpf_field_default_value'));
-			
-			
 			$wpdb->insert( $wpdb->prefix .'cpt_fields', $new_record, 
 			array( '%d', '%s' , '%s' , '%s' , '%s' , '%s'));
-
 			$this->sucess_message = '<div class="wpmpg-ultra-success"><span><i class="fa fa-check"></i>'.__("The post field was successfully created.",'wp-mosaic-page-generator').'</span></div>';
-		
 		}
-	
 	}
 
-    function handle_creation(){
-		
+    function handle_creation(){		
 		global $wpmpg, $wpdb;	
-		
 		if(!isset($_POST['cpt_name']) || $_POST['cpt_name']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please input Name.','wp-mosaic-page-generator');
 
@@ -160,10 +144,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 			
 			$this->errors[] = __('<strong>ERROR:</strong> Please input not found in trash label.','wp-mosaic-page-generator');		
 			
-	
-			
 		}else{
-
 
             $projects_labels = array(
                 'name' => $wpmpg->get_post_value('cpt_name'),
@@ -176,8 +157,7 @@ class  WpMosaicCPT extends wpmpgCommon {
                 'search_items' => $wpmpg->get_post_value('search_items'),
                 'not_found' => $wpmpg->get_post_value('not_found'),
                 'not_found_in_trash' => $wpmpg->get_post_value('not_found_in_trash'),
-                'parent_item_colon' => '');			
-						
+                'parent_item_colon' => '');								
 			
 			//we can create the membership				
 			$new_record = array('cpt_id' => NULL,	
@@ -191,16 +171,11 @@ class  WpMosaicCPT extends wpmpgCommon {
 			$wpdb->insert( $wpdb->prefix .'cpt', $new_record, 
 			array( '%d', '%s' , '%s' , '%s'));
 			$this->sucess_message = '<div class="wpmpg-ultra-success"><span><i class="fa fa-check"></i>'.__("The post types was successfully created.",'wp-mosaic-page-generator').'</span></div>';
-		
 		}
-	
-	
-	
 	}
 
-	function handle_edition(){
-		
-		global $wpmpg, $wpdb;		
+	function handle_edition(){		
+		global $wpmpg, $wpdb;	
 		
 		if(!isset($_POST['cpt_name']) || $_POST['cpt_name']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please input Name.','wp-mosaic-page-generator');
@@ -245,10 +220,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 			
 			$this->errors[] = __('<strong>ERROR:</strong> Please input not found in trash label.','wp-mosaic-page-generator');		
 			
-	
-			
 		}else{
-
 
             $projects_labels = array(
                 'name' => $wpmpg->get_post_value('cpt_name'),
@@ -262,8 +234,6 @@ class  WpMosaicCPT extends wpmpgCommon {
                 'not_found' => $wpmpg->get_post_value('not_found'),
                 'not_found_in_trash' => $wpmpg->get_post_value('not_found_in_trash'),
                 'parent_item_colon' => '');			
-						
-			
 		
 			$new_record = array(	
 								'cpt_name' =>$wpmpg->get_post_value('cpt_name'),
@@ -274,32 +244,18 @@ class  WpMosaicCPT extends wpmpgCommon {
 
 			$data_where = array('cpt_id' => $wpmpg->get_post_value('cpt_id'));
 			$wpdb->update( $wpdb->prefix .'cpt', $new_record, $data_where);							
-																	
-		
 			$this->sucess_message = '<div class="wpmpg-ultra-success"><span><i class="fa fa-check"></i>'.__("The post was successfully updated.",'wp-mosaic-page-generator').'</span></div>';
-		
 		}
-	
-	
-	
 	}
 
 	/*Get errors display*/
-	function get_errors()
-	 {
-		global $wpmpg;
-		
-		$display = null;
-		
-		if (isset($this->errors) && is_array($this->errors) && count($this->errors) >0)  
-		{
-		    $display .= '<div class="wpmpg-ultra-error">';
-		
-			foreach($this->errors as $newError) 
-			{
-				
+	function get_errors() {
+		global $wpmpg;		
+		$display = null;		
+		if (isset($this->errors) && is_array($this->errors) && count($this->errors) >0)  {
+		    $display .= '<div class="wpmpg-ultra-error">';		
+			foreach($this->errors as $newError) {
 				$display .= '<span class="wpmpg-error userscontrol-error-block"><i class="wpmpg-icon-remove"></i>'.$newError.'</span>';
-			
 			}
 		$display .= '</div>';
 		
@@ -311,16 +267,14 @@ class  WpMosaicCPT extends wpmpgCommon {
 	public function get_all ()	{
 		global $wpdb;
 		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			
-		return $wpdb->get_results( $sql);	
-		
+		return $wpdb->get_results( $sql);		
 	}
 
 	public function get_all_custom_fields ($cpt_id)	{
 		global $wpdb;
 		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt_fields WHERE cpf_cpt_id = "'.(int)$cpt_id.'"' ;		
 		$sql .= " ORDER BY  cpf_field_sorting ";
-		return $wpdb->get_results( $sql);	
-		
+		return $wpdb->get_results( $sql);		
 	}
 
 	public function get_one ($id)	{
@@ -347,8 +301,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 			foreach ( $res as $row ){
 				return $row;			
 			}
-		}	
-		
+		}
 	}
 
 	public function get_one_cpf ($id)	{
@@ -362,8 +315,6 @@ class  WpMosaicCPT extends wpmpgCommon {
 				return $row;			
 			}
 		}	
-		
 	}
-	
 }
 ?>

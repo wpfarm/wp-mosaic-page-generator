@@ -37,7 +37,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		// Hook the filter during class initialization
 		add_filter('rank_math/recalculate_scores_batch_size',array(&$this, 'set_batch_size'));
-		
+
 		// Ensure WordPress function for checking plugins is available
 		if (!function_exists('is_plugin_active')) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -68,9 +68,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action('save_post',  array( &$this, 'update_cpt_details' ), 94);
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
-			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);
-
-			
+			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
 		}		
 
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
@@ -99,12 +97,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		// Load only on specific admin pages
 		if ('toplevel_page_wpmpg' === $hook) {	
 
-			//$this->update_score->batch_size= 50;
-
 			$this->update_score->enqueue();
 			$js     = rank_math()->plugin_url() . 'assets/admin/js/';
 			$css    = rank_math()->plugin_url() . 'assets/admin/css/';
-
 			wp_enqueue_script('wp-editor'); // Required for editor-related scripts
 			wp_enqueue_script('wp-data');   // Used by Gutenberg and Rank Math
 
@@ -171,8 +166,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	 *
 	 * @return array
 	 */
-	public function footer_modal() {
-		
+	public function footer_modal() {		
 		?>
 		<div class="rank-math-modal rank-math-modal-update-score">
 			<div class="rank-math-modal-content">
@@ -187,7 +181,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					<div class="progress-bar">
 						<span></span>
 					</div>
-
 					<div class="rank-math-modal-footer hidden">
 						<p>
 							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'wp-mosaic-page-generato' ); ?>
@@ -206,7 +199,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		wp_register_style('wpmpg_fontawesome', wpmpg_url.'admin/css/font-awesome/css/font-awesome.min.css');
 		wp_enqueue_style('wpmpg_fontawesome');
 		wp_register_style('wpmpg_admin', wpmpg_url.'admin/css/admin.css' , array(), '1.0.6', false);		wp_enqueue_style('wpmpg_admin');
- 
 		wp_register_style('wpmpg_jqueryui', wpmpg_url.'admin/css/jquery-ui.css');
 		wp_enqueue_style('wpmpg_jqueryui'); 
 		wp_register_script( 'wpmpg_front_uploader', wpmpg_url.'vendors/plupload/js/plupload.full.min.js',array('jquery'),  null);
@@ -215,11 +207,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		 'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion, true );
 		wp_enqueue_script( 'wpmpg_admin' );		  
 	}      
- 
 	
-	function update_cpt_details( $post_id ){
-			
-		// If this is just a revision, don't send the email.
+	function update_cpt_details( $post_id ){			
 		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave($post_id) )
 			return;
 				 
@@ -229,15 +218,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         }
 
 		$post_type = $post->post_type;
-
 		$cptRows = $this->getAllCustomFieldsByType($post_type);
-		foreach($cptRows as $cpt) {
-			
+		foreach($cptRows as $cpt) {			
 			$meta = $cpt->cpf_field_name ;
 			$dd_t_value = $_POST[$meta];
 		    update_post_meta( $post_id, $meta,$dd_t_value);
-		}			
-			
+		}		
 	}	
 
 	function getAllCustomFieldsByType($cp_type)   {
@@ -250,16 +236,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$sql = $wpdb->prepare($sql);
 		//echo $sql;
 		$cptRows = $wpdb->get_results($sql );
-		return $cptRows ;
-	
+		return $cptRows ;	
 	}
 
-
-	function post_add_meta_box(){	
-		
+	function post_add_meta_box(){			
 		add_meta_box('wpmosaic_customfields_data', 'WP Mosaic Custom Fields', array($this, 'getPostMetaFields'), null,  'advanced' ,  'high');
 	}
-	
 	
 	public function ini_module(){
 		global $wpdb;		

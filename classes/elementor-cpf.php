@@ -6,12 +6,10 @@ use Elementor\Repeater;
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
-
     global $wpdb;	
     $custom_fields = getAllCustomFieldsMosaic();
 
-    foreach ( $custom_fields as $field  ) {     
-
+    foreach ( $custom_fields as $field  ) {   
         $meta_key = $field->cpf_field_name;
         $title = $field->cpf_field_label;
 
@@ -53,7 +51,6 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
                 }
             " );
         }
-
         // Register the dynamically created tag class
         $dynamic_tags->register_tag( $tag_class_name );
     }
@@ -68,7 +65,6 @@ function mosaic_register_new_dynamic_tag_group( $dynamic_tags_manager ) {
 			'title' => esc_html__( 'Mosaic Fields Group', 'wp-mosaic-page-generator' )
 		]
 	);
-
 }
 add_action( 'elementor/dynamic_tags/register', 'mosaic_register_new_dynamic_tag_group' );
 
