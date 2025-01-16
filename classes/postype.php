@@ -107,7 +107,6 @@ class  WpMosaicCPT extends wpmpgCommon {
 			
 			$this->errors[] = __('<strong>ERROR:</strong> The Custom Post Type already exists!.','wp-mosaic-page-generator');
 		
-
 		}elseif(!isset($_POST['singular_name']) || $_POST['singular_name']==''){
 			
 			$this->errors[] = __('<strong>ERROR:</strong> Please input singular name.','wp-mosaic-page-generator');

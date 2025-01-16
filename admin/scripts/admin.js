@@ -45,13 +45,13 @@ jQuery(document).ready(function($) {
         doIt=confirm("Are you totally sure?");
 		if(doIt){                    
             $.ajax({
-                    type: 'POST',
-                    url: ajaxurl,
-                    data: {"action": "wpmpg_delete_cpf_value",
-                           "acc_id": acc_id},
-                    success: function(data){	
-                        $("#acc-row-"+ acc_id).slideUp();
-                    }
+                type: 'POST',
+                url: ajaxurl,
+                data: {"action": "wpmpg_delete_cpf_value",
+                        "acc_id": acc_id},
+                success: function(data){	
+                    $("#acc-row-"+ acc_id).slideUp();
+                }
             }); 
         }
         e.preventDefault();         
@@ -137,7 +137,6 @@ function ms_build_links_array (){
                     const postIds = res.postIDS;                                     
 
                     if(  percent_a >= 100){
-                        //console.log('Loop finishd: BB' + " cut from : " + processed_rows_flag + "Total rows " + res.total_rows); 
                         clearInterval(loop) ;
                         $("#msm-btn-steps-bar-steps").hide(); 
                         $("#wpm-import-results-block").show();                                           

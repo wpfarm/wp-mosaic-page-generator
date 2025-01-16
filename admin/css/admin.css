@@ -1,5 +1,4 @@
 /*Admin - Main*/
-
 :root {
 	--color-primary:#0073AA;
 	--color-cancel:#aa0022;
@@ -44,7 +43,6 @@
 	position: relative;	
 	margin: 0 auto;
 	border-radius: 8px;
-   
   }
 
 .wp-upload-cont-opt {	
@@ -57,7 +55,6 @@
 	width: 100%;
 	min-height: 120px;
 	vertical-align: middle;
-
 }
 
 .rmcalculator{
@@ -74,70 +71,68 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
     border-radius:5px;
     padding:1.5rem;
-
 }
 
 .msrm-imp-options{
 	display: inline-block;
 	width: 100%;
 	display: none;
-
 }
 
 .postbox .inside h2, .wrap [class$=icon32]+h2, .wrap h1, .wrap>h2:first-child {font-weight:600;}
 
 
 
-  .msrm-options-not-selected{
-	background: none !important;
-	
-  }
+.msrm-options-not-selected{
+background: none !important;
 
-  .msm-btn-steps-bar{
-	display: none;
-  }
+}
+
+.msm-btn-steps-bar{
+display: none;
+}
 
 
-  .ui-progressbar{ 
-  
-	border: none !important; 
-  }
-  
+.ui-progressbar{ 
 
-  
-  .wpm-hide_body-table{
-	display: none;	
-  }
-
-  .wpm-import-results-block .wpm-import-opt-bar-msg{
-
-	padding: 5px 10px 5px 10px;
-    text-align: center;
-    margin: 0px;
-
-	
-  }
+border: none !important; 
+}
 
 
 
-  .sucess-check{
-	font-size: 38px;
-    color: #16b011;
-  }
+.wpm-hide_body-table{
+display: none;	
+}
 
-  .wpmpg-ultra-info, .wpmpg-ultra-success, .wpmpg-ultra-warning, .wpmpg-ultra-error, .isa_error {
+.wpm-import-results-block .wpm-import-opt-bar-msg{
 
-    border:none;
+padding: 5px 10px 5px 10px;
+text-align: center;
+margin: 0px;
 
-    margin: 10px 0px 15px 5px;
 
-    padding:15px 10px 15px 50px;
+}
 
-    background-repeat: no-repeat;
 
-    background-position: 10px center;
 
-	-moz-border-radius:.5em;
+.sucess-check{
+font-size: 38px;
+color: #16b011;
+}
+
+.wpmpg-ultra-info, .wpmpg-ultra-success, .wpmpg-ultra-warning, .wpmpg-ultra-error, .isa_error {
+
+border:none;
+
+margin: 10px 0px 15px 5px;
+
+padding:15px 10px 15px 50px;
+
+background-repeat: no-repeat;
+
+background-position: 10px center;
+
+-moz-border-radius:.5em;
 
 -webkit-border-radius:.5em;
 
@@ -148,16 +143,12 @@ border-radius:.5em;
 
 
 .wpmpg-ultra-warning {
-
     color: #9F6000;
-
     background-color: #FEEFB3;
-
 
 }
 
 .wpmpg-ultra-error {
-
     color: #D8000C;
     background-color: #FFBABA;
 }
@@ -170,13 +161,11 @@ border-radius:.5em;
 }
 .wpmpg-ultra-info {
     color: #777;
-    background-color: #e9f5fbf0;
-   
+    background-color: #e9f5fbf0;   
 }
 .wpmpg-ultra-success {
     color: #4F8A10;
-    background-color: #DFF2BF;
-   
+    background-color: #DFF2BF;   
 }
 
 .wpmpg-ultra-success i{
@@ -214,9 +203,9 @@ border-radius:.5em;
 	color: green;
 }
 
-  .file_url{
+.file_url{
 	width: 400px;
-  }
+}
 
 .mpg-download-link-btn{
 	padding: 10px;
@@ -232,15 +221,9 @@ border-radius:.5em;
 	
   }
 
-
-
-
-
-
 .msrm-imp-options .msrm-imp-options-sel{
 	display:table;
 	width:100%;
-
 }
 
 
@@ -250,8 +233,7 @@ border-radius:.5em;
 }
 
 .wpmpg-welcome-panel table i{
-	font-size: 18px;
-    
+	font-size: 18px;   
 
 }
 
@@ -302,20 +284,6 @@ border-radius:.5em;
 	display: none;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .icon-check {display:inline-block;background:url(../images/icon-check.svg);height: 20px;background-size: 20px auto;background-position: left center;background-repeat:no-repeat;padding:0 0 0 24px;color:#1F4CEE;}
 
 .col {display:table-cell;vertical-align:top;}
@@ -337,8 +305,6 @@ border-radius:.5em;
 .wpmpg-admin ::placeholder {color:rgba(73,51,113,0.57);}
 .wpmpg-admin input[type=color], .wpmpg-admin input[type=date], .wpmpg-admin input[type=datetime-local], .wpmpg-admin input[type=datetime], .wpmpg-admin input[type=email], .wpmpg-admin input[type=month], .wpmpg-admin input[type=number], .wpmpg-admin input[type=password], .wpmpg-admin input[type=search], input[type=tel], .wpmpg-admin input[type=text], .wpmpg-admin input[type=time], .wpmpg-admin input[type=url], .wpmpg-admin input[type=week], .wpmpg-admin select, .wpmpg-admin textarea, .wpmpg-admin select:hover, .wpmpg-admin select:focus, .wpmpg-admin select:active {color:#493371;}
 .wpmpg-admin input[type=text], .wpmpg-admin select {border:1px solid #b4abc2 !important;width:100%;border-radius:5px;padding:3px 10px;box-shadow:none !important;}
-
-
 
 .wpmpg-admin {margin:0 !important;}
 .wpmpg-admin .nav-tab {padding:5px 15px;margin-left:0;margin-right:0.5em;color:#1b004e;} 

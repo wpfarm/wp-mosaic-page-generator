@@ -96,7 +96,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 		// Load only on specific admin pages
 		if ('toplevel_page_wpmpg' === $hook) {	
-
 			$this->update_score->enqueue();
 			$js     = rank_math()->plugin_url() . 'assets/admin/js/';
 			$css    = rank_math()->plugin_url() . 'assets/admin/css/';
@@ -145,7 +144,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
      * @return int The modified batch size.
      */
     public function set_batch_size($batch_size) {
-        return 50; // Set your desired batch size, e.g., 50
+        return 100; // Set your desired batch size, e.g., 50
     }
 
 	/**
@@ -595,7 +594,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				}				
 					
 				$i++;
-
 		    }	//end foreach
 			$count++;
 
@@ -640,7 +638,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	function generate_post_score(){
-
 		//step 1 get new post IDS
 		$url = wpmpg_url.'wp-json/rankmath/v1/toolsAction';
 
@@ -650,7 +647,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			'args[update_all_scores]' => '1',
 		]);
 
-		$res = $this->make_post_request($url, $data);		
+		$res = $this->make_post_request($url, $data);	
 
 		//update scores by using the RankMath API
 	}
@@ -674,34 +671,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				$body = json_encode([
 					'key1' => 'value1',
 					'key2' => 'value2',
-				]);
-
-				//$this->make_post_request($url, $data)
-
-				//$this->generate_post_score();
-
-				   // Trigger the SEO Analyzer for the given post ID
-				 //  $analyzer = rank_math()->modules->analysis->analyze_object($post_id);
-
-				   //print_r( $analyzer);
-
-			
-
-				// Trigger the Rank Math analysis for the post
-
-				//rank_math()->update_post_score($post_id);
-				//rank_math()->meta->analyze_post($post_id);
-
-				
+				]);				
 
 				 // Retrieve the calculated score from post meta
 				$seo_score = get_post_meta($post_id, 'rank_math_seo_score', true);
-
 				
 				//$seo_score = rank_math()->modules->analysis->get_seo_score($post_id);
 				//update_post_meta($post_id, 'rank_math_seo_score', $seo_score);
-
-				echo "SEO score Calculated: ". $seo_score;
 			}
 		}
 	
