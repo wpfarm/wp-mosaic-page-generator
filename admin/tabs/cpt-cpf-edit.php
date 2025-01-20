@@ -55,7 +55,7 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
                 <td class="wpmpg-colval"><?php _e('Field Type', 'wp-mosaic-page-generator'); ?></td>
                 <td><select name="cpf_field_type" id="cpf_field_type" class="form-control ">
                     <option value="1"  <?php if($cpf->cpf_field_type == 1) {echo 'selected="selected"';}; ?>><?php _e('Text', 'wp-mosaic-page-generator'); ?></option>
-                    <option value="2" <?php if($cpf->cpf_field_type == 2) {echo 'selected="selected"';}; ?>><?php _e('Image', 'wp-mosaic-page-generator'); ?></option>
+                    <option value="2" <?php if($cpf->cpf_field_type == 2 || $cpf->cpf_field_type == '') {echo 'selected="selected"';}; ?>><?php _e('Image', 'wp-mosaic-page-generator'); ?></option>
             
                  </select> </td>        
             </tr>             

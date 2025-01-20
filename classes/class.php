@@ -331,7 +331,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		echo json_encode($uploadResponse);
 		die();
 	}
-
 	
 	function analize_url_to_download($url){
 
@@ -432,10 +431,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	public function start_import_ajax(){
 		global $wpdb;
 		
-		$file = $_POST['file_uploaded'] ?? '';	
-	
+		$file = $_POST['file_uploaded'] ?? '';		
 		$this->import_from_url($file);	
-
 		$postIDArray = array();
 		$headers = $this->tblHeaders;
 		$rowsDATA = $this->tblRows;
@@ -503,10 +500,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			
 			);
 
-			$post_exists = $this->the_slug_exists($post_slug, $post_type);	
-
+			$post_exists = $this->the_slug_exists($post_slug, $post_type);
 			if(!$post_exists){
-				// Insert the post into the database
 				$update_post = false;
 				$post_id = wp_insert_post( $my_post );				
 
@@ -578,7 +573,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						    $img_val = '<img class="test" alt="'.esc_attr($meta_text).'" src="'.$thumb_url.'">';                       
 						    update_post_meta( $post_id, $meta_key,$img_val );
 
-							// Set the image Alt-Text
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
 							$my_image_meta = array(
 									'ID'		=> $attach_id,			// Specify the image (ID) to be updated
@@ -596,7 +590,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				$i++;
 		    }	//end foreach
 			$count++;
-
 	    }	// end for each data
 
 		$response = array('status' => $status_process, 
@@ -611,7 +604,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		echo json_encode($response);
 		die();				
-	
 	}
 
 	function get_post_data_for_analysis() {
@@ -638,7 +630,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	function generate_post_score(){
-		//step 1 get new post IDS
 		$url = wpmpg_url.'wp-json/rankmath/v1/toolsAction';
 
 		//make the call
@@ -649,7 +640,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		$res = $this->make_post_request($url, $data);	
 
-		//update scores by using the RankMath API
 	}
 
 	function get_or_save_rank_math_seo_score($post_id) {
@@ -764,17 +754,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						delete_post_meta( $attacment_id, $meta_key );									
 					
 					}	
-				}
-				
-				
+				}			
 			}			
 
 			file_put_contents($pathBig, $image);
-					
 		} // image type
 		return $pathBig;
 	}
-
 
 	function attach_image_to_project($file_path, $file_name, $post_id  , $user_id){
 
@@ -821,8 +807,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function build_data_table($file){
-		global $wpdb;		
-
+		global $wpdb;	
 		$this->import_from_url($file);
 
 		$headers = $this->tblHeaders;
@@ -854,7 +839,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		$count = 0;
 		$rowCount =1;
-
 		foreach ( $rowsDATA  as $data ) {		
 			$html .='<table class="wp-list-table widefat  posts table-generic mspg-tbl-table">';
 			$html .='<thead>';
@@ -916,19 +900,16 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			$html .='</div>';
 		
-		$html .='</div>';
-		
+		$html .='</div>';		
 		return $html;
 	
 	}
 
-	public function getPostMetaFieldsColNew( $only_metas)   {
-			
+	public function getPostMetaFieldsColNew( $only_metas)   {			
 		$arrCol = array();		
 		
 		$img_metadata = array('slug');
-		foreach ( $only_metas  as $meta_key ) {			
-
+		foreach ( $only_metas  as $meta_key ) {		
 			if (strpos($meta_key, 'custom_field') !== false) {
 				$cpf_field_type = 1;
 			}else{ //image	
@@ -951,16 +932,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			if($this->is_custom_field($meta_key)){
 				$arrCol[$meta_key] = array('cpf_field_type' =>$cpf_field_type);
 			}
-			
-			
 		}	//end foreach
-				
 		return $arrCol;
     }
 
 	//check if custom field
 	public function is_custom_field( $meta_key)   {	
-
 		if (strpos($meta_key, 'custom_field') !== false) {			
 			return true;
 
@@ -969,15 +946,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			return true;
 	
 		}else{
-
 			return false;
 
 		}		
-	
     }
 
 	public function get_field_type( $meta_key)   {	
-
 		if (strpos($meta_key, 'custom_field') !== false) {
 			$cpf_field_type = 1;
 		}else{ //image	
@@ -1064,9 +1038,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			}		
 			
 			$count++;
-
-	    }	// end for each data
-		
+	    }	// end for each data		
     }
 
 	public function getPostMetaFieldsCol($ptype)   {
@@ -1080,14 +1052,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$cptRows = $wpdb->get_results($sql );	
 
 		$arrCol = array();
-
 		foreach($cptRows as $cpt) {  			
 			$arrCol[$cpt->cpf_field_name] = array('cpf_field_type' => $cpt->cpf_field_type, 'cpf_field_label' => $cpt->cpf_field_label);
 		}		
 		return $arrCol;
-
     }
-
 
 	public function getAllCustomFields()   {
 		global $wpdb;			
@@ -1103,9 +1072,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
     }
 
-
 	public function getPostMetaFields($oPost)   {
-
 		global $wpdb;	
 		
 		$html = '';
@@ -1123,21 +1090,17 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$cptRows = $wpdb->get_results($sql );
 
 		foreach($cptRows as $cpt) {  
-
 			$key_collection = get_post_meta( $iObjectId, $cpt->cpf_field_name, true );
 			$html .= '<div class="imnp-meta-cont">';
 			if($cpt->cpf_field_type==1){
 				$html .= '<p><strong>'.$cpt->cpf_field_label.'</strong></p>';
 				$html .='<textarea rows="4" cols="40" style="width: 100%;" name="'.$cpt->cpf_field_name.'" id="'.$cpt->cpf_field_name.'" >'.$key_collection.'</textarea>';
 
-			}else{
-
-				
+			}else{				
 
 			}
 
 			$html .= '</div>';	
-		
 		}	
 		
 		$html .= '<div class="imnp-meta-cont">';
@@ -1153,7 +1116,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		$html .= '</div>';	
 		echo $html;
-
     }
 
 	public function cpt_exists_in_db($cpt){
@@ -1169,14 +1131,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				return true;			
 			}
 		}		
-		
 		return 	  $res;				
 	}
 
 	public function cpt_exists($cpt){
-
 		$res = false;
-		
 		$args = array(
 			'public'   => true,
 			'_builtin' => false,
@@ -1188,9 +1147,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		 $post_types = get_post_types( $args, 'objects' ); 		
 	 
 		 foreach ( $post_types  as $post_type ) {
-
 			if($post_type->name==$cpt){
-
 				return true;
 			}			
 		 }
@@ -1226,7 +1183,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		 $html .= '</select>';		
 				
 		return 	  $html;	
-
 			
 	}
 
