@@ -46,9 +46,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 <form method="post" action="">
 <input type="hidden" name="wpmpg_edit_cpt"  value="wpmpg_edit_cpt"/>
 <input name="cpt_id" id="cpt_id" value="<?php echo $cpt->cpt_id?>" type="hidden"> 
-
-
-
 <?php wp_nonce_field( 'update_settings', 'wpmpg_nonce_check' ); ?>
 
     <table width="100%" class="">                      

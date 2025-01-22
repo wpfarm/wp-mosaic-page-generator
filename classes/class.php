@@ -8,13 +8,13 @@ use RankMath\Schema\DB;
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
 	public $classes_array = array();	
+	public $allowed_html;
 	var $notifications_email = array();
 	var $wpmpg_default_options;	
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
-	var $mVersion = '1.93';
-	public $allowed_html;
+	var $mVersion = '2.2';
 	var $tblHeaders;	
 	var $tblRows;			
 	var $tblCombinedRows;
@@ -559,11 +559,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
 						$meta_description = $rowsCombined[$count][$meta_description] ?? '';									
 						
-						//check if image already exists
-
-						//echo "<BR>IMAGE TO DOWNLOAD: " . $val_import ."<BR>";
+						//check if ima
 						$img_path = $this->download_from_url($val_import, $meta_slug, $post_id, $meta_key);
-						//echo "Flag 56 ";
 						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
 
 						if($attach_id!=''){

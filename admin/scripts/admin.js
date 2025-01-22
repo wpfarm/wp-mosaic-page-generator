@@ -18,7 +18,6 @@ jQuery(document).ready(function($) {
         $("#step").val('3');                  
         ms_build_links_array();
     });
-
     $(document).on("click", ".wpmpg-int-delete-acc", function(e) {
         e.preventDefault();	 
         var doIt = false;
@@ -26,13 +25,13 @@ jQuery(document).ready(function($) {
         doIt=confirm("Are you totally sure?");
 		if(doIt){                    
             $.ajax({
-                    type: 'POST',
-                    url: ajaxurl,
-                    data: {"action": "wpmpg_delete_cpf",
-                           "acc_id": acc_id},
-                    success: function(data){	
-                        $("#acc-row-"+ acc_id).slideUp();
-                    }
+                type: 'POST',
+                url: ajaxurl,
+                data: {"action": "wpmpg_delete_cpf",
+                        "acc_id": acc_id},
+                success: function(data){	
+                    $("#acc-row-"+ acc_id).slideUp();
+                }
             }); 
         }
         e.preventDefault();         
@@ -90,7 +89,7 @@ function ms_build_links_array (){
 
     hide_values_table('wpmosaic-import-tbl-body');
     hide_values_column('wms-val-col');
-   
+
     progressbar.progressbar({
         value: false,
         change: function() {
@@ -164,20 +163,16 @@ function analyzePostWithEditor(postId, callback) {
                 console.log('Rank Math', rankMathEditor)
                 const postData = response.data;
                 if (typeof rankMathEditor !== 'undefined') {
-                    // Inject post data into rankMathEditor
                     rankMathEditor.data = {
                         ...rankMathEditor.data,
                         title: postData.title,
                         content: postData.content,
                         excerpt: postData.excerpt,
                     };
-
                     // Trigger analysis
                     rankMathEditor.refresh();
-                    // Get analysis results
                     const seoScore = rankMathEditor.getScore();
                     const failedChecks = rankMathEditor.getFailed();
-                    // Pass the results to the callback function
                     callback(null, {
                         postId: postId,
                         seoScore: seoScore,

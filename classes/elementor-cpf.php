@@ -57,7 +57,6 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
 }
 
 add_action( 'elementor/dynamic_tags/register_tags', 'register_dynamic_meta_tags_mosaic' );
-
 function mosaic_register_new_dynamic_tag_group( $dynamic_tags_manager ) {
 	$dynamic_tags_manager->register_group(
 		'mosaic_custom_group',
