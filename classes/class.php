@@ -69,8 +69,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
-		}		
-
+		}
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
     }
 
@@ -119,9 +118,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 	function getAllPostCount(){
 		$args = array(
-			'post_type'      => 'any',   // Include all public post types
-			'posts_per_page' => -1,      // Fetch all posts
-			'fields'         => 'ids',  // Fetch only IDs for efficiency
+			'post_type'      => 'any',  
+			'posts_per_page' => -1,    
+			'fields'         => 'ids',  
 		);		
 		$query = new WP_Query($args);
 		$total_posts = $query->found_posts; // Total posts across all post types
@@ -170,21 +169,21 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		<div class="rank-math-modal rank-math-modal-update-score">
 			<div class="rank-math-modal-content">
 				<div class="rank-math-modal-header">
-					<h3><?php esc_html_e( 'Recalculating SEO Scores', 'wp-mosaic-page-generato' ); ?></h3>
+					<h3><?php esc_html_e( 'Recalculating SEO Scores', 'wp-mosaic-page-generator' ); ?></h3>
 					<p><?php esc_html_e( 'This process may take a while. Please keep this window open until the process is complete.', 'wp-mosaic-page-generato' ); ?></p>
 				</div>
 				<div class="rank-math-modal-body">
 					<div class="count">
-						<?php esc_html_e( 'Calculated:', 'wp-mosaic-page-generato' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total"><?php echo esc_html( $this->find() ); ?></span>
+						<?php esc_html_e( 'Calculated:', 'wp-mosaic-page-generator' ); ?> <span class="update-posts-done">0</span> / <span class="update-posts-total"><?php echo esc_html( $this->find() ); ?></span>
 					</div>
 					<div class="progress-bar">
 						<span></span>
 					</div>
 					<div class="rank-math-modal-footer hidden">
 						<p>
-							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'wp-mosaic-page-generato' ); ?>
+							<?php esc_html_e( 'The SEO Scores have been recalculated successfully!', 'wp-mosaic-page-generator' ); ?>
 						</p>
-						<button class="button button-large rank-math-modal-close"><?php esc_html_e( 'Close', 'wp-mosaic-page-generato' ); ?></button>
+						<button class="button button-large rank-math-modal-close"><?php esc_html_e( 'Close', 'wp-mosaic-page-generator' ); ?></button>
 					</div>
 				</div>
 			</div>
@@ -233,7 +232,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$sql .= " WHERE cpt.cpt_id = cpf.cpf_cpt_id    ";	
 		$sql .= " ORDER BY  cpf.cpf_field_sorting ";	
 		$sql = $wpdb->prepare($sql);
-		//echo $sql;
 		$cptRows = $wpdb->get_results($sql );
 		return $cptRows ;	
 	}

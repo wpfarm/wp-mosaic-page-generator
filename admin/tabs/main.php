@@ -9,7 +9,6 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
 
 <div class="wpmpg-welcome-panel">              
 		<form method="post" id="wmp-form">		
-
 		<input type="hidden" id="file_uploaded" name="file_uploaded" value="<?php echo $file_uploaded ;?>">
 		<input type="hidden" id="is_submited" name="is_submited" value="1">
 		<input type="hidden" id="step" name="step" value="2">

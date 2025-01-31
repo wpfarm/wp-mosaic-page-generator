@@ -1,7 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 global $wpmpg;
-
 ?>
 
 <h3><?php _e('Plugin Settings','wp-mosaic-page-generator'); ?></h3>

@@ -57,8 +57,7 @@ $auxCPF = new WpMosaicCPT();
                     <img src="<?php echo plugins_url( 'images/icon-settings.svg', dirname( __FILE__ ) ); ?>">
                     </a> 
                    <a href="#" class="wpmpg-int-delete-acc right delete" acc-id="<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a>                      
-                       
-                    
+                   
 
                    </td>                  
                </tr>               

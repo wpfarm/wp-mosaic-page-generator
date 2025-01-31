@@ -45,7 +45,7 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
                         if ( ! empty( \$value ) ) {
                             echo  \$value;
                         } else {
-                            //echo __( 'No meta value found', 'wp-mosaic-page-generato' );
+                            //echo __( 'No meta value found', 'wp-mosaic-page-generator' );
                         }
                     }
                 }
