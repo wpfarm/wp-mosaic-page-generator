@@ -8,8 +8,7 @@ jQuery(document).ready(function($) {
     $(document).on("click", ".act_way_to_upload", function() {      
         var selected_step =  $(this).attr("selected-opt");  
         var _sel_val =$(this).val();                        
-    }); 
-    
+    });     
     $(document).on("click", "#wmp-btn-submit", function() {   
         $("#wmp-form").submit();               
     });

@@ -11,7 +11,6 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
         echo 'error';
         exit;
     } 
-
 }else{ 	
   $message =  '<div class="wpmpg-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
   echo wp_kses($message, $wpmpg->allowed_html);
@@ -68,14 +67,12 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
             </tr> 
         </tbody>
     </table>
-
    
     <div class="submit">
     <a href="?page=wpmpg&tab=cpt-cpf&id=<?php echo $cpt_id?>"><button type="button" class="outline"><?php _e('Back', 'wp-mosaic-page-generator'); ?></button></a>
 	<input type="submit" name="submit" id="submit" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
     </div>
-</p>
-   	
+</p>   	
 </div>
 </form>
 </div>

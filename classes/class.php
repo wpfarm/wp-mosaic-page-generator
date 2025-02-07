@@ -108,8 +108,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			if ( ! wp_script_is( 'lodash', 'registered' ) ) {
 				wp_register_script( 'lodash', rank_math()->plugin_url() . 'assets/vendor/lodash.js', [], rank_math()->version );
 				wp_add_inline_script( 'lodash', 'window.lodash = _.noConflict();' );
-			}
-			
+			}			
 			wp_enqueue_script('rank-math-common-js', plugins_url('seo-by-rank-math/assets/admin/js/common.js'), ['jquery'], null, true);
 			wp_enqueue_script('rank-math-app-js', plugins_url('seo-by-rank-math/assets/admin/js/rank-math-app.js'), ['jquery'], null, true);
             wp_enqueue_script('rank-math-schema-js', plugins_url('seo-by-rank-math/includes/modules/schema/assets/js/schema-gutenberg.js'), ['jquery'], null, true);
@@ -206,13 +205,19 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		wp_enqueue_script( 'wpmpg_admin' );		  
 	}      
 	
-	function update_cpt_details( $post_id ){			
+	function update_cpt_details( $post_id ){
+		
+		 // Avoid running on Quick Edit
+		 if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			return;
+		}
+		
 		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave($post_id) )
 			return;
 				 
 		 $post = get_post($post_id);
         if($post->post_status == 'trash' ){
-                return $post_id;
+            return $post_id;
         }
 
 		$post_type = $post->post_type;
@@ -331,15 +336,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 	
 	function analize_url_to_download($url){
-
 		$parsedUrl = parse_url($url);
 		$pathInfo = pathinfo($parsedUrl['path']);
-
 		$real_name = $pathInfo['basename'];
 		$dir_name = $pathInfo['dirname'];
 		$ext = $pathInfo['extension'];
 		$ext=strtolower($ext);
-
 		// Check if the URL is Google Sheet "example"
 		if (strpos($url, "https://docs.google.com/spreadsheets") !== false) {
 
@@ -347,9 +349,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		} else {
 			//echo "The URL does not contain the string 'tutor'.";
 		}
-
 		return $url;
-
 	}
 
 	function download_file_from_url(){
@@ -358,8 +358,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$url = $this->analize_url_to_download($url);
 						
 		$image = file_get_contents($url);			
-		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;				
-
+		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;			
 		$parsedUrl = parse_url($url);
 		$pathInfo = pathinfo($parsedUrl['path']);
 		
@@ -555,9 +554,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
 						$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
 						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
-						$meta_description = $rowsCombined[$count][$meta_description] ?? '';									
-						
-						//check if ima
+						$meta_description = $rowsCombined[$count][$meta_description] ?? '';						
+		
 						$img_path = $this->download_from_url($val_import, $meta_slug, $post_id, $meta_key);
 						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
 
@@ -567,13 +565,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 							// Update this line to include the alt attribute
 						    $img_val = '<img class="test" alt="'.esc_attr($meta_text).'" src="'.$thumb_url.'">';                       
 						    update_post_meta( $post_id, $meta_key,$img_val );
-
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
 							$my_image_meta = array(
-									'ID'		=> $attach_id,			// Specify the image (ID) to be updated
-									'post_title'	=> $meta_title,		// Set image Title to sanitized title
-									'post_excerpt'	=> $meta_text,		// Set image Caption (Excerpt) to sanitized title
-									'post_content'	=> $meta_description, // Set image Description (Content) to sanitized title
+									'ID'		=> $attach_id,			
+									'post_title'	=> $meta_title,		
+									'post_excerpt'	=> $meta_text,		
+									'post_content'	=> $meta_description, 
 								);
 
 							// Set the image meta (e.g. Title, Excerpt, Content)
@@ -710,9 +707,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	function download_from_url($url, $meta_slug,  $post_id, $meta_key){
 						
 		$image = file_get_contents($url);			
-		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;				
-
-		//$rand_name = basename($url);
+		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;		
 		$rand_name =$meta_slug;		
 
 		$parsedUrl = parse_url($url);
@@ -758,7 +753,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	function attach_image_to_project($file_path, $file_name, $post_id  , $user_id){
-
 		$mime_type = wp_get_image_mime($file_path);
 		$attachment = array(
 			'post_parent' =>$post_id,
@@ -885,9 +879,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         </div>';
 
 		$html .='<div class="row batch wpm-import-opt-bar" id="wpm-import-opt-bar">';
-		   // $html .='<p>'.__('Batches').'</p>';
 			$html .='<span>'.__('Batches').'</span>: <input type="number" id="batch" name="batch" value="3">';
-
 		
 		$html .='</div>';
 
@@ -935,14 +927,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	public function is_custom_field( $meta_key)   {	
 		if (strpos($meta_key, 'custom_field') !== false) {			
 			return true;
-
 		}elseif(strpos($meta_key, 'custom_image') !== false){ //image	
-
-			return true;
-	
+			return true;	
 		}else{
 			return false;
-
 		}		
     }
 
@@ -959,7 +947,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				$cpf_field_type = 1;
 			}elseif(strpos($meta_key, 'description') !== false){ 
 				$cpf_field_type = 1;
-
 			}else{
 
 				$cpf_field_type = 0;	//it's the image itself
@@ -1004,8 +991,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				array( '%d', '%s' , '%s' , '%s'));
 
 				// Get the last inserted ID
-				$post_type_id = $wpdb->insert_id;	
-								
+				$post_type_id = $wpdb->insert_id;									
 				
 			}else{		
 				//update custom fields

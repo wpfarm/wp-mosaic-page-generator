@@ -8,11 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
     global $wpdb;	
     $custom_fields = getAllCustomFieldsMosaic();
-
     foreach ( $custom_fields as $field  ) {   
         $meta_key = $field->cpf_field_name;
         $title = $field->cpf_field_label;
-
         $tag_class_name = 'Dynamic_Meta_Tag_' . sanitize_key( $meta_key );
 
         if ( ! class_exists( $tag_class_name ) ) {
