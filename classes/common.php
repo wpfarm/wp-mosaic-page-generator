@@ -15,6 +15,59 @@ class wpmpgCommon{
 	    }	    
 	    return $this->wp_all_pages;
 	}
+
+	function singularize($word) {
+		$irregular = [
+			'people' => 'person',
+			'men' => 'man',
+			'women' => 'woman',
+			'children' => 'child',
+			'teeth' => 'tooth',
+			'feet' => 'foot',
+			'mice' => 'mouse',
+			'geese' => 'goose',
+			'data' => 'datum',
+			'cacti' => 'cactus',
+			'fungi' => 'fungus',
+			'nuclei' => 'nucleus',
+			'syllabi' => 'syllabus',
+			'analyses' => 'analysis',
+			'diagnoses' => 'diagnosis',
+			'oases' => 'oasis',
+			'theses' => 'thesis',
+			'crises' => 'crisis',
+			'phenomena' => 'phenomenon',
+			'criteria' => 'criterion',
+			'alumni' => 'alumnus'
+		];
+	
+		// Check for irregular plurals
+		if (isset($irregular[$word])) {
+			return $irregular[$word];
+		}
+	
+		// Handle words ending in "ies" -> "y" (e.g., "cities" -> "city")
+		if (preg_match('/(.*)ies$/', $word, $matches)) {
+			return $matches[1] . 'y';
+		}
+	
+		// Handle words ending in "ves" -> "f" (e.g., "leaves" -> "leaf")
+		if (preg_match('/(.*)([^o]ves)$/', $word, $matches)) {
+			return $matches[1] . 'f';
+		}
+	
+		// Handle words ending in "oes" (e.g., "heroes" -> "hero")
+		if (preg_match('/(.*)oes$/', $word, $matches)) {
+			return $matches[1] . 'o';
+		}
+	
+		// Handle words ending in "s" but not "ss" (e.g., "cars" -> "car", but "glass" -> "glass")
+		if (preg_match('/(.*[^s])s$/', $word, $matches)) {
+			return $matches[1];
+		}
+	
+		return $word; // Return unchanged if no rule applies
+	}
 	
 	function get_all_sytem_cagegories(){		
 		$args = array(

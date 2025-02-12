@@ -2,7 +2,7 @@
 /*
 Plugin Name: Mosaic Page Generator
 Description: Premium AI-powered location pages that boost rankings. Requires subscription with Direction.com
-Version: 2.2
+Version: 2.3
 Author: Direction.com
 */
 

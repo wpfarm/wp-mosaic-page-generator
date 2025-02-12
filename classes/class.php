@@ -14,7 +14,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
-	var $mVersion = '2.2';
+	var $mVersion = '2.3';
 	var $tblHeaders;	
 	var $tblRows;			
 	var $tblCombinedRows;
@@ -59,6 +59,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action('admin_init', array(&$this, 'admin_init'), 15);	
 		add_action('add_meta_boxes', array($this, 'post_add_meta_box' ));	
 		add_action('init', array($this, 'ini_group_modules_pro'));	
+		add_action('init', array($this, 'register_taxonomies'));	
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_upload_file',  array( $this, 'upload_file_parse' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_download_url_file',  array( $this, 'download_file_from_url' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_process',  array( $this, 'start_import_ajax' ));	
@@ -206,10 +207,22 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}      
 	
 	function update_cpt_details( $post_id ){
+
+		global $pagenow;
+		if ( $pagenow === 'edit.php' ) {
+			return;
+		}
 		
 		 // Avoid running on Quick Edit
 		 if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
 			return;
+		}
+
+		// Avoid running on Quick Edit and Bulk Edit
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			if ( isset( $_POST['action'] ) && $_POST['action'] === 'bulk_edit' ) {
+				return;
+			}
 		}
 		
 		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave($post_id) )
@@ -244,7 +257,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	function post_add_meta_box(){			
 		add_meta_box('wpmosaic_customfields_data', 'WP Mosaic Custom Fields', array($this, 'getPostMetaFields'), null,  'advanced' ,  'high');
 	}
-	
+
 	public function ini_module(){
 		global $wpdb;		
 		$query = '
@@ -256,8 +269,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			  `cpt_status` int(1) NOT NULL DEFAULT 1,		  			 	  
 			  PRIMARY KEY (`cpt_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-			';
-			
+			';			
 		$wpdb->query( $query );	
 
 		$query = '
@@ -271,19 +283,28 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			  `cpf_field_default_value` varchar(100) NOT NULL,		  			 	  
 			  PRIMARY KEY (`cpf_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-			';
-			
+			';			
+		$wpdb->query( $query );	
+
+		$query = '
+			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_taxonomies(
+			  `tax_id` int(11) NOT NULL AUTO_INCREMENT,	
+			  `tax_cpt_id` int(11) NOT NULL ,		 
+			  `tax_label` varchar(200) NOT NULL,		
+			  `tax_slug` varchar(100) NOT NULL,	
+			  `tax_properties` text NOT NULL,	  			 	  
+			  PRIMARY KEY (`tax_id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+			';			
 		$wpdb->query( $query );	
 
 		$query = '
 			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_credits(
 			  `credit_id` int(11) NOT NULL AUTO_INCREMENT,	
-			  `credit_page_id` int(11) NOT NULL ,				 
-					  			 	  
+			  `credit_page_id` int(11) NOT NULL ,					  			 	  
 			  PRIMARY KEY (`credit_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-			';
-			
+			';			
 		$wpdb->query( $query );	
 
 	}
@@ -434,9 +455,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$headers = $this->tblHeaders;
 		$rowsDATA = $this->tblRows;
 		$rowsDOrigin = $this->tblRows;	
-		$rowsCombined = $this->tblCombinedRows;		
-
-		$only_metas = array_slice($headers, 6, count($headers), false); 
+		$rowsCombined = $this->tblCombinedRows;	
+		
+		$only_meta_starts = 6;
+		$only_metas = array_slice($headers, $only_meta_starts , count($headers), false); 
 
 		$batch_from = $_POST['batch'] ?? 1;
 		$last_row = $_POST['last'] ?? 0;				
@@ -475,7 +497,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$post_slug = $rowsDATA[$count][2];
  			$rank_math_title = $rowsDATA[$count][3];            
 			$meta_desc = $rowsDATA[$count][4];   
-			$keyword = $rowsDATA[$count][5];   
+			$keyword = $rowsDATA[$count][5];  			
+			  
 			$post_desc ='';		
 			$post_excerpt = '';		
 			
@@ -527,9 +550,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
 
 			$postIDArray[] = $post_id;
-
-			//$this->get_or_save_rank_math_seo_score($post_id);
-		
+	
 			$i = 6;	// custom meta fields starts
 			foreach ( $only_metas  as $meta_key ) {
 
@@ -541,6 +562,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					if($custom_field['cpf_field_type']==1){ //text					
 
 						update_post_meta( $post_id, $meta_key,$val_import );
+
+					}elseif($custom_field['cpf_field_type']==2){ //taxonomies
+
+						$cpt = $post_type;
+						$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
+						$term = $this->get_terms_from_string($val_import ); //returns an array
+
+						//handle taxonomies -- cpt, $tax_field, $term
+						$this->handle_taxo($cpt, $tax_field, $term);
 
 					}else{ //image	
 							
@@ -598,6 +628,111 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();				
 	}
 
+	//--returns the taxonomy from header
+	function get_taxo_from_string($str){
+		$taxoArray = explode('_', $str);
+		$ret = $taxoArray[2] ?? '';
+		return $ret;
+	}
+
+	//--returns the term, slug and plural 
+	function get_terms_from_string($str){
+		$termArray = explode('-', $str);
+		return $termArray;
+	}
+
+	//--creates taxonomy in mosaic plugin table
+	function handle_taxo($cpt, $tax_field_slug, $term){
+		global $wpdb;
+
+		//get all CPT and Custom Taxonomies
+		$taxonomies = get_object_taxonomies($cpt, 'objects');
+		
+		$tax_field_label = ucfirst($tax_field_slug);
+
+		//check if taxonomy exists already
+		if (!taxonomy_exists($tax_field_slug)) {
+
+			$auxCommon = new wpmpgCommon();
+			$singular_name = $auxCommon->singularize($name);
+			$name = ucfirst($name);
+
+			$labels = [
+				'name'              =>  $name, // States
+				'singular_name'     => $singular_name,
+				'menu_name'         => $name,
+				'all_items'         => 'All '.$name,
+				'edit_item'         => 'Edit '.$singular_name, //singular
+				'view_item'         => 'View '.$singular_name,
+				'add_new_item'      => 'Add New '.$singular_name,
+				'new_item_name'     => 'New '.$singular_name.'',
+				'search_items'      => 'Search '.$name,
+			];
+		
+			$args = [
+				'labels'            => $labels,
+				'public'            => true,
+				'hierarchical'      => true, 
+				'show_admin_column' => true,
+				'show_ui'           => true,
+				'show_in_rest'      => true, // Enable for Gutenberg & API
+				'rewrite'           => ['slug' => $tax_field_slug],
+			];		
+
+			$new_record = array('tax_id' => NULL,
+			                    'tax_cpt_id' 	 => $tax_cpt_id,
+								'tax_label' =>ucfirst($post_type),
+								'tax_slug' =>$post_type,								
+								'tax_properties' => json_encode( $args),								
+										
+								);														
+																		
+			$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
+				array( '%d', '%s' , '%s' , '%s' , '%s'));
+
+			// Get the last inserted ID
+			$taxo_id = $wpdb->insert_id;			
+
+		}
+
+	}
+
+	//-- register taxo on init
+	function register_taxonomies() {
+
+	}
+
+	function register_custom_taxo($taxo_slug, $name, $cpt) {
+		$auxCommon = new wpmpgCommon();
+		$singular_name = $auxCommon->singularize($name);
+		$name = ucfirst($name);
+		$labels = [
+			'name'              =>  $name, // States
+			'singular_name'     => $singular_name,
+			'menu_name'         => $name,
+			'all_items'         => 'All '.$name,
+			'edit_item'         => 'Edit '.$singular_name, //singular
+			'view_item'         => 'View '.$singular_name,
+			'add_new_item'      => 'Add New '.$singular_name,
+			'new_item_name'     => 'New '.$singular_name.' Name',
+			'search_items'      => 'Search '.$name,
+		];
+	
+		$args = [
+			'labels'            => $labels,
+			'public'            => true,
+			'hierarchical'      => true, // true = acts like Categories, false = acts like Tags
+			'show_admin_column' => true,
+			'show_ui'           => true,
+			'show_in_rest'      => true, // Enable for Gutenberg & API
+			'rewrite'           => ['slug' => $taxo_slug],
+		];
+	
+		register_taxonomy($taxo_slug, [$cpt], $args);
+	}
+
+
+
 	function get_post_data_for_analysis() {
 		if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {
 			wp_send_json_error(['message' => 'Invalid post ID']);
@@ -631,7 +766,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		]);
 
 		$res = $this->make_post_request($url, $data);	
-
 	}
 
 	function get_or_save_rank_math_seo_score($post_id) {
@@ -788,7 +922,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		}
 	}
 
-
 	function get_post_id_by_slug( $slug, $post_type ) {
 		global $wpdb;
 		$sql = "SELECT ID FROM ". $wpdb->prefix. "posts where post_type='".$post_type."' AND post_name='".$slug."'";
@@ -841,7 +974,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			$i = 0;			
 			foreach ( $headers  as $key ) {
-
 				$val_import = $rowsDATA[$count][$i] ?? 'N/A';
 				$html .='<tr>';
 					$html .='<td class="wpmpg-field-tbl">'.$key .'</td>';
@@ -899,6 +1031,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		foreach ( $only_metas  as $meta_key ) {		
 			if (strpos($meta_key, 'custom_field') !== false) {
 				$cpf_field_type = 1;
+			}elseif(strpos($meta_key, 'custom_tax') !== false){ //taxonomy
+				$cpf_field_type = 2;
 			}else{ //image	
 
 				if (strpos($meta_key, 'slug') !== false) { //is slug
@@ -909,7 +1043,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					$cpf_field_type = 1;
 				}elseif(strpos($meta_key, 'description') !== false){ 
 					$cpf_field_type = 1;
-
 				}else{
 
 					$cpf_field_type = 0;	//it's the image itself
@@ -978,14 +1111,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					'not_found_in_trash' => __('Not found in trash'),
 					'parent_item_colon' => '');
 							
-				//we can create the membership				
 				$new_record = array('cpt_id' => NULL,	
 									'cpt_name' =>ucfirst($post_type),
 									'cpt_unique_key' =>$post_type,								
 									'cpt_properties' => json_encode( $projects_labels),								
 										
-									);	
-													
+									);														
 																		
 				$wpdb->insert( $wpdb->prefix .'cpt', $new_record, 
 				array( '%d', '%s' , '%s' , '%s'));
