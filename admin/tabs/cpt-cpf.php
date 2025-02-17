@@ -1,6 +1,5 @@
 <?php
 global $wpmpg;
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 $auxNewPCT = new WpMosaicCPT(); 
@@ -14,16 +13,13 @@ if(isset($_GET['id']) && $_GET['id']!=''){
         exit;
     } 
 
-}else{ 
-	
+}else{ 	
   $message =  '<div class="userscontrol-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
   echo wp_kses($message, $wpmpg->allowed_html);
   exit;		
 }
-$cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
-        
+$cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );        
 ?>
-
 <div class="wpmpg-welcome-panel">
     <div class="row item first uploader">
         <div class="col col-9 info mid">
@@ -55,8 +51,7 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
            
            <?php 
            $i = 1;
-           foreach($cptRows as $cpt) {    
-            
+           foreach($cptRows as $cpt) {                
             $cp_type = ($cpt->cpf_field_type==1) ? 'Text' : 'Image';
               
            ?>

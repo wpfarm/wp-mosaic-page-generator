@@ -1,6 +1,6 @@
 <?php
 global $wpmpg;
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 $auxNewPCT = new WpMosaicCPT();  
 if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){	

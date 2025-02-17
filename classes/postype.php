@@ -8,7 +8,6 @@ class  WpMosaicCPT extends wpmpgCommon {
 		$this->handle_init_a();       
     }	
 
-
     function handle_init_a() 	{
 		
 		if (isset($_POST['wpmpg_create_cpt'])) {
@@ -30,7 +29,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 	}
 
 	function handle_update_cpf(){			
-		global $wpmpg, $wpdb;		
+		global $wpmpg, $wpdb;	
 		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please set a type.','wp-mosaic-page-generator');

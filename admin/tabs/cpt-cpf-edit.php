@@ -1,7 +1,6 @@
 <?php
 global $wpmpg;
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
+if ( ! defined( 'ABSPATH' ) ) exit; 
 $auxNewPCT = new WpMosaicCPT();  
 
 if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){	
@@ -22,17 +21,15 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
 	
   $message =  '<div class="wpmpg-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
   echo wp_kses($message, $wpmpg->allowed_html);
-  exit;	
-	
+  exit;		
 }
 
 ?>
-
 <div class="wpmpg-welcome-panel">
     <div class="row item first uploader">
         <div class="col col-9 info mid">
             <div class="row label">Edit Custom Field for <?php echo $cpt->cpt_name?></div>
-            <div class="row description">Here you can manage your custom fields.</div>
+            <div class="row description"> <?php echo wp_kses('Here you can manage your custom fields.', $wpmpg->allowed_html);?></div>
         </div>
         <div class="col col-3 click">
         </div>

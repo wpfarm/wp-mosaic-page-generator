@@ -12,7 +12,6 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
         $meta_key = $field->cpf_field_name;
         $title = $field->cpf_field_label;
         $tag_class_name = 'Dynamic_Meta_Tag_' . sanitize_key( $meta_key );
-
         if ( ! class_exists( $tag_class_name ) ) {
             // Dynamically create a unique class for each meta field
             eval( "

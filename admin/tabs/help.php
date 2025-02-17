@@ -5,7 +5,6 @@ global $wpmpg;
 ?>
 
 <div class="wpmpg-welcome-panel">
-
 <div class="row item first uploader">
     <div class="col col-9 info mid">
         <div class="row label"><?php _e('Help Center','wp-mosaic-page-generator'); ?></div>
@@ -15,7 +14,6 @@ global $wpmpg;
 
 <form method="post" action="">
 <input type="hidden" name="wpmpg_update_settings" />
-
 
 <div  class="">
 

@@ -64,7 +64,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 
     <h2><?php _e('Labels', 'wp-mosaic-page-generator'); ?> </h2>
 
-
     <table width="100%" class="">                      
         <tbody>          
             <tr>

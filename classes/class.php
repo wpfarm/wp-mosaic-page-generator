@@ -333,7 +333,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$upload_dir = wp_upload_dir(); 
 		$path_pics =   $upload_dir['basedir'];		
 					
-		if($ext == 'png' || $ext == 'jpg' || $ext == 'jpeg' || $ext == 'webp' || $ext == 'gif' || $ext == 'csv'){
+		if($ext == 'csv'){
 				
 				if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
 					wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
@@ -569,7 +569,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
 						$term = $this->get_terms_from_string($val_import ); //returns an array
 
-						//handle taxonomies -- cpt, $tax_field, $term
+						//handle taxonomies -- cpt, $tax_field, $term -- This is for updating the db
 						$this->handle_taxo($cpt, $tax_field, $term);
 
 					}else{ //image	
@@ -592,7 +592,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						if($attach_id!=''){
 
 							$thumb_url = wp_get_attachment_url($attach_id);
-							// Update this line to include the alt attribute
+
 						    $img_val = '<img class="test" alt="'.esc_attr($meta_text).'" src="'.$thumb_url.'">';                       
 						    update_post_meta( $post_id, $meta_key,$img_val );
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
@@ -641,7 +641,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		return $termArray;
 	}
 
-	//--creates taxonomy in mosaic plugin table
+	//--creates taxonomy in mosaic plugin table -- 
 	function handle_taxo($cpt, $tax_field_slug, $term){
 		global $wpdb;
 
@@ -658,11 +658,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$name = ucfirst($name);
 
 			$labels = [
-				'name'              =>  $name, // States
+				'name'              =>  $name, // States --
 				'singular_name'     => $singular_name,
 				'menu_name'         => $name,
 				'all_items'         => 'All '.$name,
-				'edit_item'         => 'Edit '.$singular_name, //singular
+				'edit_item'         => 'Edit '.$singular_name, 
 				'view_item'         => 'View '.$singular_name,
 				'add_new_item'      => 'Add New '.$singular_name,
 				'new_item_name'     => 'New '.$singular_name.'',
@@ -700,6 +700,51 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	//-- register taxo on init
 	function register_taxonomies() {
 
+		//-- pull taxo from DB
+
+		//----------------------------------------------
+		//----------register taxo in system
+		//----------------------------------------------		
+
+		$taxo_registered = $this->get_all_post_types();		
+
+ 		if (!empty($taxo_registered)){ //////////-- If there are registered taxonomies
+			
+			foreach($taxo_registered as $taxo) { 	
+
+				$taxo_slug = $taxo->tax_slug;
+
+				$labels_data = json_decode($taxo->tax_properties);	
+
+				
+				$labels = [
+					'name'              =>  $name, // States --
+					'singular_name'     => $singular_name,
+					'menu_name'         => $name,
+					'all_items'         => 'All '.$name,
+					'edit_item'         => 'Edit '.$singular_name, 
+					'view_item'         => 'View '.$singular_name,
+					'add_new_item'      => 'Add New '.$singular_name,
+					'new_item_name'     => 'New '.$singular_name.'',
+					'search_items'      => 'Search '.$name,
+				];
+			
+				$args = [
+					'labels'            => $labels,
+					'public'            => true,
+					'hierarchical'      => true, 
+					'show_admin_column' => true,
+					'show_ui'           => true,
+					'show_in_rest'      => true, // Enable for Gutenberg & API
+					'rewrite'           => ['slug' => $tax_field_slug],
+				];						
+				
+				register_taxonomy($taxo_slug, [$cpt], $args);	
+
+			}
+		}
+
+
 	}
 
 	function register_custom_taxo($taxo_slug, $name, $cpt) {
@@ -730,8 +775,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 		register_taxonomy($taxo_slug, [$cpt], $args);
 	}
-
-
 
 	function get_post_data_for_analysis() {
 		if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {

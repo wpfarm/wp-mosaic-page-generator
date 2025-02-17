@@ -43,8 +43,7 @@ $auxCPF = new WpMosaicCPT();
             $cptCPFRows = $auxCPF->get_all_custom_fields($cpt->cpt_id);
             $cpf_qty = count($cptCPFRows);
               
-           ?>             
-
+           ?>            
                <tr id="acc-row-<?php echo $cpt->cpt_id?>">
                    <td><?php echo  $i; ?></td>
                    <td><?php echo esc_attr($cpt->cpt_name); ?></td>  
