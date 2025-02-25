@@ -2,8 +2,7 @@
 use Elementor\Core\DynamicTags\Tag;
 use Elementor\Controls_Manager;
 use Elementor\Repeater;
-
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit; 
 
 function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
     global $wpdb;	

@@ -288,6 +288,19 @@ class  WpMosaicCPT extends wpmpgCommon {
 		
 	}
 
+	public function getCPTWithSlug ($slug)	{
+		global $wpdb;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			
+		$sql .= ' WHERE cpt_unique_key = "'.$slug.'"' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				return $row;			
+			}
+		}			
+	}
+
 	public function delete_one_cpf ($id)	{
 		global $wpdb;
 		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			

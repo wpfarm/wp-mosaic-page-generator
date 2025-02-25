@@ -7,14 +7,13 @@ use RankMath\Admin\Metabox\Screen;
 use RankMath\Schema\DB;
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
-	public $classes_array = array();	
 	public $allowed_html;
 	var $notifications_email = array();
 	var $wpmpg_default_options;	
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
-	var $mVersion = '2.3';
+	var $mVersion ;
 	var $tblHeaders;	
 	var $tblRows;			
 	var $tblCombinedRows;
@@ -53,7 +52,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$this->set_allowed_html();		
 		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 		$this->plugin_data = get_plugin_data( wpmpg_path . 'index.php', false, false);
-		$this->version = $this->plugin_data['Version'];		
+		$this->version = $this->plugin_data['Version'];	
+		$this->mVersion = $this->plugin_data['Version'];			
 		add_action('admin_menu', array(&$this, 'add_menu'), 11);
 		add_action('admin_head', array(&$this, 'admin_head'), 13 );
 		add_action('admin_init', array(&$this, 'admin_init'), 15);	
@@ -66,7 +66,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf',  array( $this, 'delete_cpf' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf_value',  array( $this, 'delete_cpf_value' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_score_rebuild',  array( $this, 'get_post_data_for_analysis' ));
-		add_action('save_post',  array( &$this, 'update_cpt_details' ), 94);
+		add_action('save_post',  array( &$this, 'update_cpt_details' ), 116);
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
@@ -289,7 +289,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$query = '
 			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_taxonomies(
 			  `tax_id` int(11) NOT NULL AUTO_INCREMENT,	
-			  `tax_cpt_id` int(11) NOT NULL ,		 
+			  `tax_cpt_id` int(11) NOT NULL ,
+			  `tax_cpt_slug` varchar(100) NOT NULL,			 
 			  `tax_label` varchar(200) NOT NULL,		
 			  `tax_slug` varchar(100) NOT NULL,	
 			  `tax_properties` text NOT NULL,	  			 	  
@@ -424,6 +425,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	public function get_all_post_types(){
 		global $wpdb;
 		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt ' ;			
+		return $wpdb->get_results( $sql);	
+	}
+
+	public function get_all_taxonomies(){
+		global $wpdb;
+		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies ORDER BY 	tax_label ' ;			
 		return $wpdb->get_results( $sql);	
 	}
 
@@ -570,7 +577,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$term = $this->get_terms_from_string($val_import ); //returns an array
 
 						//handle taxonomies -- cpt, $tax_field, $term -- This is for updating the db
-						$this->handle_taxo($cpt, $tax_field, $term);
+						$this->handle_taxo($cpt_slug, $tax_field, $term);
 
 					}else{ //image	
 							
@@ -642,7 +649,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	//--creates taxonomy in mosaic plugin table -- 
-	function handle_taxo($cpt, $tax_field_slug, $term){
+	function handle_taxo($cpt, $tax_field_slug , $term = array()){
 		global $wpdb;
 
 		//get all CPT and Custom Taxonomies
@@ -679,54 +686,57 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				'rewrite'           => ['slug' => $tax_field_slug],
 			];		
 
+
+			//get CPT 
+			$auxNewPCT = new WpMosaicCPT();
+			$cpt_row = $auxNewPCT->getCPTWithSlug($cpt);
+
 			$new_record = array('tax_id' => NULL,
-			                    'tax_cpt_id' 	 => $tax_cpt_id,
-								'tax_label' =>ucfirst($post_type),
-								'tax_slug' =>$post_type,								
+			                    'tax_cpt_id' 	 => $cpt_row->cpt_id,
+								'tax_cpt_slug' 	 => $cpt,
+								'tax_label' =>ucfirst($tax_field_label),
+								'tax_slug' =>$tax_field_slug,								
 								'tax_properties' => json_encode( $args),								
 										
 								);														
 																		
 			$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
-				array( '%d', '%s' , '%s' , '%s' , '%s'));
+				array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
 
 			// Get the last inserted ID
-			$taxo_id = $wpdb->insert_id;			
-
+			$taxo_id = $wpdb->insert_id;	
+			
+			echo "Taxonommy ID: " . $taxo_id;
 		}
-
 	}
 
 	//-- register taxo on init
 	function register_taxonomies() {
 
-		//-- pull taxo from DB
-
+		//-- pull taxo from DB  --- - ---- --
 		//----------------------------------------------
 		//----------register taxo in system
 		//----------------------------------------------		
 
-		$taxo_registered = $this->get_all_post_types();		
+		$taxo_registered = $this->get_all_taxonomies();		
 
  		if (!empty($taxo_registered)){ //////////-- If there are registered taxonomies
 			
 			foreach($taxo_registered as $taxo) { 	
 
 				$taxo_slug = $taxo->tax_slug;
-
 				$labels_data = json_decode($taxo->tax_properties);	
-
 				
 				$labels = [
-					'name'              =>  $name, // States --
-					'singular_name'     => $singular_name,
-					'menu_name'         => $name,
-					'all_items'         => 'All '.$name,
-					'edit_item'         => 'Edit '.$singular_name, 
-					'view_item'         => 'View '.$singular_name,
-					'add_new_item'      => 'Add New '.$singular_name,
-					'new_item_name'     => 'New '.$singular_name.'',
-					'search_items'      => 'Search '.$name,
+					'name'              =>  $labels_data->name, // States --
+					'singular_name'     => $labels_data->singular_name,
+					'menu_name'         => $labels_data->menu_name,
+					'all_items'         =>  __('All','wp-mosaic-page-generator').' '. $labels_data->all_items,
+					'edit_item'         => __('Edit ','wp-mosaic-page-generator').$labels_data->edit_item, 
+					'view_item'         => __('View ','wp-mosaic-page-generator').$labels_data->view_item,
+					'add_new_item'      => __('Add New ','wp-mosaic-page-generator').$labels_data->add_new_item,
+					'new_item_name'     => __('New ','wp-mosaic-page-generator').$labels_data->new_item_name.'',
+					'search_items'      => __('Search ','wp-mosaic-page-generator').$labels_data->search_items,
 				];
 			
 				$args = [
@@ -741,10 +751,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 				register_taxonomy($taxo_slug, [$cpt], $args);	
 
+				// register terms for this taxo
+
+
+
 			}
 		}
-
-
 	}
 
 	function register_custom_taxo($taxo_slug, $name, $cpt) {
@@ -752,7 +764,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$singular_name = $auxCommon->singularize($name);
 		$name = ucfirst($name);
 		$labels = [
-			'name'              =>  $name, // States
+			'name'              =>  $name, // This is the plural name, example States
 			'singular_name'     => $singular_name,
 			'menu_name'         => $name,
 			'all_items'         => 'All '.$name,
@@ -802,7 +814,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	function generate_post_score(){
 		$url = wpmpg_url.'wp-json/rankmath/v1/toolsAction';
 
-		//make the call
 		$data = json_encode([
 			'action' => 'update_seo_score',
 			'args[update_all_scores]' => '1',
@@ -1009,8 +1020,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$html .='<thead>';
 			$html .='<tr id="wms-tbl-val-'.$count.'">';
 				//build header
-				$html .='<th class="wpmpg-field-tbl">'.__('Row','image-notes-plus-WP'). ' '.$rowCount.'</th>';
-				$html .='<th id="wms-tbl-val-col-'.$count.'" class="wms-val-col">'.__('Ready','image-notes-plus-WP'). '</th>';
+				$html .='<th class="wpmpg-field-tbl">'.__('Row','wp-mosaic-page-generator'). ' '.$rowCount.'</th>';
+				$html .='<th id="wms-tbl-val-col-'.$count.'" class="wms-val-col">'.__('Ready','wp-mosaic-page-generator'). '</th>';
 			$html .='</tr>';
 			$html .='</thead>';
 			$html .='<tbody class="wpmosaic-import-tbl-body">	';
@@ -1949,31 +1960,30 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		<div class="wrap <?php echo $this->slug; ?>-admin"> 
 
             
-<div class="<?php echo $this->slug; ?>-header">
-    
-    <img src="<?php echo plugins_url( 'admin/images/direction-logo.png', dirname( __FILE__ ) ); ?>" alt="Logo">
-    <span class="name">
-        <span class="version">
-        <?php
-            if ( ! function_exists( 'get_plugin_data' ) ) {
-                require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-            }
+		<div class="<?php echo $this->slug; ?>-header">
+			
+			<img src="<?php echo plugins_url( 'admin/images/direction-logo.png', dirname( __FILE__ ) ); ?>" alt="Logo">
+			<span class="name">
+				<span class="version">
+				<?php
+					if ( ! function_exists( 'get_plugin_data' ) ) {
+						require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+					}
 
-            $plugin_file_path = plugin_dir_path( __DIR__ ) . 'index.php'; 
-            
-            $plugin_data = get_plugin_data( $plugin_file_path );
-            echo 'Plugin Version: ' . $plugin_data['Version'];
-            ?>
-        </span>
-        Page Generator</span>
-</div>      
+					$plugin_file_path = plugin_dir_path( __DIR__ ) . 'index.php'; 
+					
+					$plugin_data = get_plugin_data( $plugin_file_path );
+					_e('Plugin Version:','wp-mosaic-page-generator') . $plugin_data['Version'] ;
+					?>
+				</span>
+				<?php _e('Page Generator','wp-mosaic-page-generator')?></span>
+		</div>      
             
                 <h2 class="nav-tab-wrapper"><?php $this->admin_tabs(); ?>  </h2>  
   
             
 
-			<div class="<?php echo $this->slug; ?>-admin-contain">   
-            
+			<div class="<?php echo $this->slug; ?>-admin-contain">              
                
 			
 				<?php 		

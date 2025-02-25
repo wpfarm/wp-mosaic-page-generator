@@ -4,8 +4,7 @@ class wpmpgCommon{
 	var $options ;	
 	public function __construct(){		
 		$this->options = get_option('wpmpg_options');	
-	}
-	
+	}	
 	function get_all_sytem_pages()	{
 	    if($this->wp_all_pages === false) {
 	        $this->wp_all_pages[0] = "Select Page";

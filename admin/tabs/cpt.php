@@ -1,7 +1,6 @@
 <?php
 global $wpmpg;
-
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit; 
 $cptRows = $wpmpg->get_all_post_types();
 $auxCPF = new WpMosaicCPT();        
 ?>

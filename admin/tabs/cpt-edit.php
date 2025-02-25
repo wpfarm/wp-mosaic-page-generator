@@ -1,10 +1,8 @@
 <?php
 global $wpmpg;
+if ( ! defined( 'ABSPATH' ) ) exit; 
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-$auxNewPCT = new WpMosaicCPT();        
-
+$auxNewPCT = new WpMosaicCPT();      
 if(isset($_GET['id']) && $_GET['id']!=''){	
 	$id = sanitize_text_field($_GET['id']);	
 	$cpt = $auxNewPCT->get_one($id);
@@ -14,8 +12,7 @@ if(isset($_GET['id']) && $_GET['id']!=''){
     if(!isset($cpt->cpt_id)){
         echo 'error';
         exit;
-    }
- 
+    } 
 
 }else{ 
 	
@@ -24,7 +21,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
   exit;	
 	
 }
-
 
 ?>
 
@@ -116,7 +112,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
     <p class="submit">
 	<input type="submit" name="submit" id="submit" value="<?php _e('Submit','wp-mosaic-page-generator'); ?>"  />
 </p>
-
    	
 </div>
 </form>
