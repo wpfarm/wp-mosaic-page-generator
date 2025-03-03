@@ -9,8 +9,8 @@ $auxCPF = new WpMosaicCPT();
 
     <div class="row item first uploader">
         <div class="col col-9 info mid">
-            <div class="row label">Custom Post Types</div>
-            <div class="row description">Here you can manage your custom post types.</div>
+            <div class="row label"> <?php _e('Custom Post Types', 'wp-mosaic-page-generator'); ?></div>
+            <div class="row description"> <?php _e('Here you can manage your custom post types.', 'wp-mosaic-page-generator'); ?></div>
         </div>
         <div class="col col-3 click">
             <a href="?page=wpmpg&tab=cpt-add"><button type="button"><?php _e('Create New', 'wp-mosaic-page-generator'); ?></button></a>
@@ -27,7 +27,8 @@ $auxCPF = new WpMosaicCPT();
                    <th width="2%"><?php _e('#', 'wp-mosaic-page-generator'); ?></th>
                    <th><?php _e('Name', 'wp-mosaic-page-generator'); ?></th>  
                    <th><?php _e('Unique Post Type Slug', 'wp-mosaic-page-generator'); ?></th> 
-                   <th><?php _e('Custom Post Fields', 'wp-mosaic-page-generator'); ?></th>                 
+                   <th><?php _e('Custom Post Fields', 'wp-mosaic-page-generator'); ?></th>   
+                   <th><?php _e('Taxonomies', 'wp-mosaic-page-generator'); ?></th>                
                    <th><?php _e('Actions', 'wp-mosaic-page-generator'); ?></th>                   
                    
                </tr>
@@ -41,13 +42,17 @@ $auxCPF = new WpMosaicCPT();
             
             $cptCPFRows = $auxCPF->get_all_custom_fields($cpt->cpt_id);
             $cpf_qty = count($cptCPFRows);
+
+            //get taxonomies
+            $taxo_qty = 0;
               
            ?>            
                <tr id="acc-row-<?php echo $cpt->cpt_id?>">
                    <td><?php echo  $i; ?></td>
                    <td><?php echo esc_attr($cpt->cpt_name); ?></td>  
                    <td><?php echo esc_attr($cpt->cpt_unique_key); ?></td> 
-                   <td><?php echo $cpf_qty; ?></td>                  
+                   <td><?php echo $cpf_qty; ?></td>  
+                   <td><?php echo $taxo_qty; ?></td>                 
                    <td>
                     <a class="left" href="?page=wpmpg&tab=cpt-cpf&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Fields','wp-mosaic-page-generator'); ?>">Edit Fields</a>                       
                        
@@ -56,7 +61,6 @@ $auxCPF = new WpMosaicCPT();
                     </a> 
                    <a href="#" class="wpmpg-int-delete-acc right delete" acc-id="<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a>                      
                    
-
                    </td>                  
                </tr>               
                

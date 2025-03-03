@@ -16,7 +16,7 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 
 }else{ 
 	
-  $message =  '<div class="userscontrol-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
+  $message =  '<div class="wpmpg-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
   echo wp_kses($message, $wpmpg->allowed_html);
   exit;	
 	

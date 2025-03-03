@@ -35,8 +35,8 @@ $file_uploaded = $_POST['file_uploaded'] ?? '';
             
                 <div class="row item">
                     <div class="col col-9 info mid">
-                        <div class="row label">Custom Post Types</div>
-                        <div class="row description">Here you can manage your custom post types.</div>
+                        <div class="row label"> <?php _e('Custom Post Types', 'wp-mosaic-page-generator'); ?></div>
+                        <div class="row description"><?php _e('Here you can manage your custom post types.', 'wp-mosaic-page-generator'); ?></div>
                     </div>
                     <div class="col col-3 click">
                         <a class="outline" href="<?php echo site_url('/wp-admin/admin.php?page=wpmpg&tab=cpt');?>"><img src="<?php echo plugins_url( 'images/icon-settings.svg', dirname( __FILE__ ) ); ?>"></a>

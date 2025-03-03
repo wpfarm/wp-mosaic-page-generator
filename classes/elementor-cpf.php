@@ -33,7 +33,7 @@ function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
                     public function get_categories() {
                         return [ \Elementor\Modules\DynamicTags\Module::TEXT_CATEGORY ];
                     }
-
+                        
                     protected function render() {
                         \$post_id = get_the_ID();
                         \$value = get_post_meta( \$post_id, \$this->meta_key, true );

@@ -65,19 +65,12 @@ class  WpMosaicCPT extends wpmpgCommon {
 		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please set a type.','wp-mosaic-page-generator');
-
-		}elseif(!isset($_POST['cpf_cpt_id']) || $_POST['cpf_cpt_id']==''){
-			
-			$this->errors[] = __('<strong>ERROR:</strong> Please set a post type id.','wp-mosaic-page-generator');
-		
-		}elseif(!isset($_POST['cpf_field_label']) || $_POST['cpf_field_label']==''){
-			
-			$this->errors[] = __('<strong>ERROR:</strong> Please input a label.','wp-mosaic-page-generator');
-			
-		}elseif(!isset($_POST['cpf_field_name']) || $_POST['cpf_field_name']==''){
-			
-			$this->errors[] = __('<strong>ERROR:</strong> Please input field name.','wp-mosaic-page-generator');	
-			
+		}elseif(!isset($_POST['cpf_cpt_id']) || $_POST['cpf_cpt_id']==''){			
+			$this->errors[] = __('<strong>ERROR:</strong> Please set a post type id.','wp-mosaic-page-generator');		
+		}elseif(!isset($_POST['cpf_field_label']) || $_POST['cpf_field_label']==''){			
+			$this->errors[] = __('<strong>ERROR:</strong> Please input a label.','wp-mosaic-page-generator');			
+		}elseif(!isset($_POST['cpf_field_name']) || $_POST['cpf_field_name']==''){			
+			$this->errors[] = __('<strong>ERROR:</strong> Please input field name.','wp-mosaic-page-generator');			
 		}else{
 
             $new_record = array(
@@ -254,8 +247,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 			foreach($this->errors as $newError) {
 				$display .= '<span class="wpmpg-error userscontrol-error-block"><i class="wpmpg-icon-remove"></i>'.$newError.'</span>';
 			}
-		$display .= '</div>';
-		
+		$display .= '</div>';		
 
 		}
 		return $display;
@@ -284,8 +276,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 			foreach ( $res as $row ){
 				return $row;			
 			}
-		}	
-		
+		}			
 	}
 
 	public function getCPTWithSlug ($slug)	{
@@ -317,8 +308,7 @@ class  WpMosaicCPT extends wpmpgCommon {
 	public function get_one_cpf ($id)	{
 		global $wpdb;
 		$sql = 'SELECT * FROM ' . $wpdb->prefix . 'cpt_fields ' ;			
-		$sql .= ' WHERE cpf_id = "'.(int)$id.'"' ;	
-				
+		$sql .= ' WHERE cpf_id = "'.(int)$id.'"' ;					
 		$res = $wpdb->get_results($sql);		
 		if ( !empty( $res ) ){
 			foreach ( $res as $row ){

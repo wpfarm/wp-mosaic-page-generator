@@ -22,8 +22,8 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
 
     <div class="row item first uploader">
         <div class="col col-9 info mid">
-            <div class="row label">New Post Field for <?php echo $cpt->cpt_name?></div>
-            <div class="row description">Create a custom field</div>
+            <div class="row label"><?php _e('New Post Field for', 'wp-mosaic-page-generator'); ?> <?php echo $cpt->cpt_name?></div>
+            <div class="row description"> <?php _e('Create a custom field', 'wp-mosaic-page-generator'); ?></div>
         </div>
         <div class="col col-3 click">
         </div>

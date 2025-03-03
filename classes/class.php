@@ -13,6 +13,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $ajax_prefix = 'wpmpg';	
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
+	var $mCustomTaxoSlug;
 	var $mVersion ;
 	var $tblHeaders;	
 	var $tblRows;			
@@ -53,7 +54,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 		$this->plugin_data = get_plugin_data( wpmpg_path . 'index.php', false, false);
 		$this->version = $this->plugin_data['Version'];	
-		$this->mVersion = $this->plugin_data['Version'];			
+		$this->mVersion = $this->plugin_data['Version'];		
+
 		add_action('admin_menu', array(&$this, 'add_menu'), 11);
 		add_action('admin_head', array(&$this, 'admin_head'), 13 );
 		add_action('admin_init', array(&$this, 'admin_init'), 15);	
@@ -109,7 +111,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			if ( ! wp_script_is( 'lodash', 'registered' ) ) {
 				wp_register_script( 'lodash', rank_math()->plugin_url() . 'assets/vendor/lodash.js', [], rank_math()->version );
 				wp_add_inline_script( 'lodash', 'window.lodash = _.noConflict();' );
-			}			
+			}	
+
 			wp_enqueue_script('rank-math-common-js', plugins_url('seo-by-rank-math/assets/admin/js/common.js'), ['jquery'], null, true);
 			wp_enqueue_script('rank-math-app-js', plugins_url('seo-by-rank-math/assets/admin/js/rank-math-app.js'), ['jquery'], null, true);
             wp_enqueue_script('rank-math-schema-js', plugins_url('seo-by-rank-math/includes/modules/schema/assets/js/schema-gutenberg.js'), ['jquery'], null, true);
@@ -300,6 +303,17 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$wpdb->query( $query );	
 
 		$query = '
+			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_taxonomy_terms(
+			  `term_id` int(11) NOT NULL AUTO_INCREMENT,	
+			  `term_taxo_slug` varchar(100) NOT NULL,	
+			  `term_slug` varchar(100) NOT NULL,			 
+			  `term_name` varchar(200) NOT NULL,
+			  PRIMARY KEY (`term_id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+			';			
+		$wpdb->query( $query );	
+
+		$query = '
 			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_credits(
 			  `credit_id` int(11) NOT NULL AUTO_INCREMENT,	
 			  `credit_page_id` int(11) NOT NULL ,					  			 	  
@@ -336,16 +350,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					
 		if($ext == 'csv'){
 				
-				if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
-					wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
-				}			
-												
-				$pathBig = $path_pics.'/'.$upload_temp_folder."/".$rand_name.".".$ext;							
-							
-				if (copy($file['tmp_name'], $pathBig)){		
-					
-					$new_avatar = $rand_name.".".$ext;				
-				}				
+			if(!is_dir($path_pics.'/'.$upload_temp_folder)) {
+				wp_mkdir_p( $path_pics.'/'.$upload_temp_folder );							   
+			}			
+											
+			$pathBig = $path_pics.'/'.$upload_temp_folder."/".$rand_name.".".$ext;							
+						
+			if (copy($file['tmp_name'], $pathBig)){						
+				$new_avatar = $rand_name.".".$ext;				
+			}				
 					
 		} // image type
 				
@@ -369,7 +382,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			$url = 'https://docs.google.com'.$dir_name.'/export?format=csv';
 		} else {
-			//echo "The URL does not contain the string 'tutor'.";
+			
 		}
 		return $url;
 	}
@@ -454,8 +467,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function start_import_ajax(){
-		global $wpdb;
-		
+		global $wpdb;		
 		$file = $_POST['file_uploaded'] ?? '';		
 		$this->import_from_url($file);	
 		$postIDArray = array();
@@ -523,8 +535,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				'post_name'  => $post_slug,			
 				'post_status'   => 'publish',
 				'post_author'   => $user_id,
-				'post_type'   => $post_type	,			
-			
+				'post_type'   => $post_type	,		
 			);
 
 			$post_exists = $this->the_slug_exists($post_slug, $post_type);
@@ -577,7 +588,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$term = $this->get_terms_from_string($val_import ); //returns an array
 
 						//handle taxonomies -- cpt, $tax_field, $term -- This is for updating the db
-						$this->handle_taxo($cpt_slug, $tax_field, $term);
+						$this->handle_taxo($post_type, $tax_field, $term);
 
 					}else{ //image	
 							
@@ -658,22 +669,22 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$tax_field_label = ucfirst($tax_field_slug);
 
 		//check if taxonomy exists already
-		if (!taxonomy_exists($tax_field_slug)) {
+		if (!$this->taxo_exists_in_db($tax_field_slug)) {
 
 			$auxCommon = new wpmpgCommon();
-			$singular_name = $auxCommon->singularize($name);
-			$name = ucfirst($name);
+			$singular_name = $auxCommon->singularize($tax_field_label);
+			$name = ucfirst($tax_field_label);
 
 			$labels = [
 				'name'              =>  $name, // States --
 				'singular_name'     => $singular_name,
 				'menu_name'         => $name,
-				'all_items'         => 'All '.$name,
-				'edit_item'         => 'Edit '.$singular_name, 
-				'view_item'         => 'View '.$singular_name,
-				'add_new_item'      => 'Add New '.$singular_name,
-				'new_item_name'     => 'New '.$singular_name.'',
-				'search_items'      => 'Search '.$name,
+				'all_items'         => $name,
+				'edit_item'         => $singular_name, 
+				'view_item'         => $singular_name,
+				'add_new_item'      => $singular_name,
+				'new_item_name'     => $singular_name.'',
+				'search_items'      => $name,
 			];
 		
 			$args = [
@@ -684,8 +695,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				'show_ui'           => true,
 				'show_in_rest'      => true, // Enable for Gutenberg & API
 				'rewrite'           => ['slug' => $tax_field_slug],
-			];		
-
+			];
 
 			//get CPT 
 			$auxNewPCT = new WpMosaicCPT();
@@ -706,14 +716,28 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			// Get the last inserted ID
 			$taxo_id = $wpdb->insert_id;	
 			
-			echo "Taxonommy ID: " . $taxo_id;
+			//add terms in DB linked with the taxo ID
+
+			//--Create custom terms for this taxonomy
+			$term_slug = $term[0] ?? '';
+			$term_name = $term[1] ?? '';
+			//$this->set_taxonomy_terms($tax_field_slug, $term);
+			$new_record = array('term_id' => NULL,
+			                    'term_taxo_slug' 	 => $tax_field_slug,
+								'term_slug' 	 => $term_slug,
+								'term_name' =>ucfirst($term_name)					
+								);														
+																		
+			$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
+				array( '%d', '%s' , '%s' ,'%s' ));
+			
 		}
 	}
 
 	//-- register taxo on init
 	function register_taxonomies() {
 
-		//-- pull taxo from DB  --- - ---- --
+		//-- pull up taxo from DB  --- - ---- --
 		//----------------------------------------------
 		//----------register taxo in system
 		//----------------------------------------------		
@@ -722,21 +746,22 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
  		if (!empty($taxo_registered)){ //////////-- If there are registered taxonomies
 			
-			foreach($taxo_registered as $taxo) { 	
+			foreach($taxo_registered as $taxo) { 			
 
 				$taxo_slug = $taxo->tax_slug;
-				$labels_data = json_decode($taxo->tax_properties);	
+				$cpt = $taxo->tax_cpt_slug;				
+				$labels_data = json_decode($taxo->tax_properties)->labels;	
 				
 				$labels = [
 					'name'              =>  $labels_data->name, // States --
 					'singular_name'     => $labels_data->singular_name,
 					'menu_name'         => $labels_data->menu_name,
-					'all_items'         =>  __('All','wp-mosaic-page-generator').' '. $labels_data->all_items,
-					'edit_item'         => __('Edit ','wp-mosaic-page-generator').$labels_data->edit_item, 
-					'view_item'         => __('View ','wp-mosaic-page-generator').$labels_data->view_item,
-					'add_new_item'      => __('Add New ','wp-mosaic-page-generator').$labels_data->add_new_item,
-					'new_item_name'     => __('New ','wp-mosaic-page-generator').$labels_data->new_item_name.'',
-					'search_items'      => __('Search ','wp-mosaic-page-generator').$labels_data->search_items,
+					'all_items'         =>  $labels_data->all_items,
+					'edit_item'         => $labels_data->edit_item, 
+					'view_item'         => $labels_data->view_item,
+					'add_new_item'      => $labels_data->add_new_item,
+					'new_item_name'     => $labels_data->new_item_name.'',
+					'search_items'      => $labels_data->search_items,
 				];
 			
 				$args = [
@@ -745,18 +770,44 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					'hierarchical'      => true, 
 					'show_admin_column' => true,
 					'show_ui'           => true,
-					'show_in_rest'      => true, // Enable for Gutenberg & API
-					'rewrite'           => ['slug' => $tax_field_slug],
-				];						
-				
+					'show_in_rest'      => true, // Enable for Gutenberg & API  
+					'rewrite'           => ['slug' => $taxo_slug],
+				];	
+
 				register_taxonomy($taxo_slug, [$cpt], $args);	
 
-				// register terms for this taxo
-
-
-
+				//
 			}
 		}
+	}
+
+	//--this function registers the terms right after they have been initiated
+	function set_taxonomy_terms($taxo_slug, $term){
+
+		//--Create custom terms for this taxonomy
+		$term_slug = $term[0] ?? '';
+		$term_name = $term[1] ?? '';		
+
+		if($term_slug!='' && $term_name!=''){
+			if (!term_exists($term_slug, $taxo_slug)) {
+
+				echo "<br>Creating term: ";
+				echo "Term slug: ". $term_slug ;
+				echo "Term Name: ". $term_name ;
+				echo "Taxo slug Name: ". $taxo_slug ;
+
+				echo "<br>";
+
+				$result = wp_insert_term($term_name, $taxo_slug, array('slug' => $term_slug));
+
+				if (is_wp_error($result)) {
+					echo 'Error: ' . $result->get_error_message();
+				} else {
+					echo 'Term inserted successfully!';
+				}
+				
+			}
+		}		
 	}
 
 	function register_custom_taxo($taxo_slug, $name, $cpt) {
@@ -1115,7 +1166,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		if (strpos($meta_key, 'custom_field') !== false) {			
 			return true;
 		}elseif(strpos($meta_key, 'custom_image') !== false){ //image	
-			return true;	
+			return true;
+		}elseif(strpos($meta_key, 'custom_tax') !== false){ //taxonomy	
+			return true;
+
 		}else{
 			return false;
 		}		
@@ -1294,6 +1348,22 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		if ( !empty( $res ) ){
 			foreach ( $res as $row ){
 				$this->mCustomPostType = $row->cpt_id;
+				return true;			
+			}
+		}		
+		return 	  $res;				
+	}
+
+	public function taxo_exists_in_db($taxo_slug){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies  ' ;			
+		$sql .= ' WHERE tax_slug = "'.$taxo_slug.'"' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				$this->mCustomTaxoSlug = $row->tax_id;
 				return true;			
 			}
 		}		
