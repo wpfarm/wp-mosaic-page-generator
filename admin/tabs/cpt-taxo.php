@@ -43,14 +43,12 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
                    <th><?php _e('Slug', 'wp-mosaic-page-generator'); ?></th> 
                    <th><?php _e('Terms', 'wp-mosaic-page-generator'); ?></th>               
                    <th class="actions"><?php _e('Actions', 'wp-mosaic-page-generator'); ?></th>                   
-                   
                </tr>
            </thead>           
            <tbody>           
            <?php 
            $i = 1;
-           foreach($cptRows as $cpt) {                
-              
+           foreach($cptRows as $cpt) {              
            ?>             
 
                <tr id="acc-row-<?php echo $cpt->cpf_id ?>">

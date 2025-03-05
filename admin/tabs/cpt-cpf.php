@@ -33,8 +33,7 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
         </div>
     </div>      
 
- <div class="row post-types">
-        
+ <div class="row post-types">        
         <?php if (!empty($cptRows)){ ?>      
           <table width="100%" class="wp-list-table widefat fixed posts table-generic">
            <thead>
@@ -54,8 +53,7 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
            foreach($cptRows as $cpt) {                
             $cp_type = ($cpt->cpf_field_type==1) ? 'Text' : 'Image';
               
-           ?>
-             
+           ?>            
 
                <tr id="acc-row-<?php echo $cpt->cpf_id ?>">
                    <td><?php echo  $i; ?></td>

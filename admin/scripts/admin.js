@@ -9,6 +9,7 @@ jQuery(document).ready(function($) {
         var selected_step =  $(this).attr("selected-opt");  
         var _sel_val =$(this).val();                        
     });     
+    
     $(document).on("click", "#wmp-btn-submit", function() {   
         $("#wmp-form").submit();               
     });
@@ -17,6 +18,7 @@ jQuery(document).ready(function($) {
         $("#step").val('3');                  
         ms_build_links_array();
     });
+
     $(document).on("click", ".wpmpg-int-delete-acc", function(e) {
         e.preventDefault();	 
         var doIt = false;
@@ -77,9 +79,10 @@ jQuery(document).ready(function($) {
 });
 
 function ms_build_links_array (){ 
+    var progressbar = $( "#progressbar" );
     mmrunningstatus_mosaic =1;
-    var progressbar = $( "#progressbar" ),
     progressLabel = $( ".progress-label" );  
+
     $("#msearch_res").html('');
     $("#mm-title-status").html('Processing ... please wait.');
     $("#cancel-replace-process").html('CANCEL');    
@@ -134,7 +137,7 @@ function ms_build_links_array (){
                     progressbar.progressbar( "value",  percent_a );                     
                     const postIds = res.postIDS;                                     
 
-                    if(  percent_a >= 100){
+                    if( percent_a >= 100){
                         clearInterval(loop) ;
                         $("#msm-btn-steps-bar-steps").hide(); 
                         $("#wpm-import-results-block").show();                                           
@@ -159,7 +162,7 @@ function analyzePostWithEditor(postId, callback) {
         },
         success: function (response) {
             if (response.success) {
-                console.log('Rank Math', rankMathEditor)
+                console.log('Rank Math Plugin', rankMathEditor)
                 const postData = response.data;
                 if (typeof rankMathEditor !== 'undefined') {
                     rankMathEditor.data = {

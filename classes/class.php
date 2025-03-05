@@ -581,7 +581,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 						update_post_meta( $post_id, $meta_key,$val_import );
 
-					}elseif($custom_field['cpf_field_type']==2){ //taxonomies
+					}elseif($custom_field['cpf_field_type']==2){ //custom taxonomies
 
 						$cpt = $post_type;
 						$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
@@ -740,8 +740,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		//-- pull up taxo from DB  --- - ---- --
 		//----------------------------------------------
 		//----------register taxo in system
-		//----------------------------------------------		
-
+		//----------------------------------------------	
 		$taxo_registered = $this->get_all_taxonomies();		
 
  		if (!empty($taxo_registered)){ //////////-- If there are registered taxonomies
@@ -895,10 +894,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				]);				
 
 				 // Retrieve the calculated score from post meta
-				$seo_score = get_post_meta($post_id, 'rank_math_seo_score', true);
+				$seo_score = get_post_meta($post_id, 'rank_math_seo_score', true);				
 				
-				//$seo_score = rank_math()->modules->analysis->get_seo_score($post_id);
-				//update_post_meta($post_id, 'rank_math_seo_score', $seo_score);
 			}
 		}
 	

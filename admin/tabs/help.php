@@ -1,14 +1,13 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 global $wpmpg;
-
 ?>
 
 <div class="wpmpg-welcome-panel">
 <div class="row item first uploader">
     <div class="col col-9 info mid">
         <div class="row label"><?php _e('Help Center','wp-mosaic-page-generator'); ?></div>
-        <div class="row description">Here you can manage your custom post types.</div>
+        <div class="row description"><?php _e('Here you can manage your custom post types.','wp-mosaic-page-generator'); ?></div>
     </div>
 </div>
 
@@ -41,10 +40,6 @@ global $wpmpg;
 <p><b><?php _e('Text Fields: Prefix: custom_image'); ?> </b></p> 
 <p><?php _e('Example usage:'); ?> </p> 
 <p><?php _e('custom_image_banner.  A field for uploading a banner image.'); ?> </p>
-
-
-
-
 
 
 </div>

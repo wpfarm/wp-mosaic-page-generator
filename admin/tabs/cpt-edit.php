@@ -7,7 +7,6 @@ if(isset($_GET['id']) && $_GET['id']!=''){
 	$id = sanitize_text_field($_GET['id']);	
 	$cpt = $auxNewPCT->get_one($id);
     $cpt_att = json_decode($cpt->cpt_properties);
-    //print_r($cpt_att);
    
     if(!isset($cpt->cpt_id)){
         echo 'error';
