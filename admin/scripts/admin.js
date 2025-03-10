@@ -65,7 +65,7 @@ jQuery(document).ready(function($) {
                 "link_to_download": $("#file_url").val()
             },                       
             success: function(data){
-                var res = jQuery.parseJSON(data);	             
+                var res = $.parseJSON(data);	             
                 $("#file_uploaded").val(res.image);
                 $("#msrm-imp-options").slideDown(400, function() {
                     if ($(this).css('display') === 'block') {
@@ -203,12 +203,12 @@ function analyzePostsBatchWithDelay(postIds, delay = 1000) {
             return;
         }
         const postId = postIds[currentIndex];
-        console.log(`Processing Post ID ${postId} (${currentIndex + 1}/${postIds.length})`);
+        console.log(`Processing Post ID: ${postId} (${currentIndex + 1}/${postIds.length})`);
         analyzePostWithEditor(postId, function (error, result) {
             if (error) {
-                console.error(`Post ID ${postId}:`, error);
+                console.error(`Post ID: ${postId}:`, error);
             } else {
-                console.log(`Post ID ${postId} Results:`, result);
+                console.log(`Post ID: ${postId} Results:`, result);
                 results.push(result);
             }
             // Move to the next post after the delay

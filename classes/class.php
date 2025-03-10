@@ -5,6 +5,7 @@ use RankMath\Traits\Hooker;
 use RankMath\Paper\Paper;
 use RankMath\Admin\Metabox\Screen;
 use RankMath\Schema\DB;
+
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
 	public $allowed_html;
@@ -14,6 +15,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	var $allowed_inputs = array();	
 	var $mCustomPostType;
 	var $mCustomTaxoSlug;
+	
 	var $mVersion ;
 	var $tblHeaders;	
 	var $tblRows;			
@@ -466,6 +468,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();
 	}
 
+	//this function deletes all custom fields of this CPT by slug
+	public function deleteAllCpf($cpt_id){
+		global $wpdb;		
+		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_cpt_id '=>$cpt_id ], [ '%d' ] );		
+	}
+
 	public function start_import_ajax(){
 		global $wpdb;		
 		$file = $_POST['file_uploaded'] ?? '';		
@@ -476,7 +484,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$rowsDOrigin = $this->tblRows;	
 		$rowsCombined = $this->tblCombinedRows;	
 		
-		$only_meta_starts = 6;
+		$only_meta_starts = 8;
 		$only_metas = array_slice($headers, $only_meta_starts , count($headers), false); 
 
 		$batch_from = $_POST['batch'] ?? 1;
@@ -516,7 +524,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			$post_slug = $rowsDATA[$count][2];
  			$rank_math_title = $rowsDATA[$count][3];            
 			$meta_desc = $rowsDATA[$count][4];   
-			$keyword = $rowsDATA[$count][5];  			
+			$keyword = $rowsDATA[$count][5];  
+			
+			$taxo = $rowsDATA[$count][6];  
+			$taxo_terms = $rowsDATA[$count][7];  
 			  
 			$post_desc ='';		
 			$post_excerpt = '';		
@@ -539,6 +550,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			);
 
 			$post_exists = $this->the_slug_exists($post_slug, $post_type);
+
 			if(!$post_exists){
 				$update_post = false;
 				$post_id = wp_insert_post( $my_post );				
@@ -567,9 +579,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			update_post_meta( $post_id, 'rank_math_description',$meta_desc );	
 			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
 
+			///- we handle taxo and terms
+
+			$this->handleByPostType($taxo, $taxo_terms,  $post_id,  $post_type);
+
+
+
 			$postIDArray[] = $post_id;
 	
-			$i = 6;	// custom meta fields starts
+			$i = 8;	// custom meta fields starts
 			foreach ( $only_metas  as $meta_key ) {
 
 				$val_import = $rowsDATA[$count][$i] ?? '';
@@ -584,11 +602,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					}elseif($custom_field['cpf_field_type']==2){ //custom taxonomies
 
 						$cpt = $post_type;
-						$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
-						$term = $this->get_terms_from_string($val_import ); //returns an array
+						//$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
+						//$term = $this->get_terms_from_string($val_import ); //returns an array
 
 						//handle taxonomies -- cpt, $tax_field, $term -- This is for updating the db
-						$this->handle_taxo($post_type, $tax_field, $term);
+						//$this->handle_taxo($post_type, $tax_field, $term);
 
 					}else{ //image	
 							
@@ -644,6 +662,87 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		echo json_encode($response);
 		die();				
+	}
+
+	//--returns the taxonomy from header
+	function handleByPostType($taxo, $taxo_terms,  $post_id,  $cpt){
+
+		$auxCommon = new wpmpgCommon();
+
+		$taxoArray = explode(',', $taxo);
+		$termsArray = explode('-', $taxo_terms);
+
+		$i = 0;
+
+		foreach ( $taxoArray  as $taxonomy ) {
+
+			$tax_field_label = ucfirst($taxonomy);
+
+			//check if taxonomy exists already
+			if (!$this->taxo_exists_in_db($taxonomy)) {
+				
+				$singular_name = $auxCommon->singularize($taxonomy);
+				$name = ucfirst($taxonomy);
+
+				$labels = [
+					'name'              =>  $name, // States --
+					'singular_name'     => $singular_name,
+					'menu_name'         => $name,
+					'all_items'         => $name,
+					'edit_item'         => $singular_name, 
+					'view_item'         => $singular_name,
+					'add_new_item'      => $singular_name,
+					'new_item_name'     => $singular_name.'',
+					'search_items'      => $name,
+				];
+			
+				$args = [
+					'labels'            => $labels,
+					'public'            => true,
+					'hierarchical'      => true, 
+					'show_admin_column' => true,
+					'show_ui'           => true,
+					'show_in_rest'      => true, // Enable for Gutenberg & API
+					'rewrite'           => ['slug' => $taxonomy],
+				];
+
+				//get CPT 
+				$auxNewPCT = new WpMosaicCPT();
+				$cpt_row = $auxNewPCT->getCPTWithSlug($cpt);
+
+				$new_record = array('tax_id' => NULL,
+									'tax_cpt_id' 	 => $cpt_row->cpt_id,
+									'tax_cpt_slug' 	 => $cpt,
+									'tax_label' =>ucfirst($tax_field_label),
+									'tax_slug' =>$tax_field_slug,								
+									'tax_properties' => json_encode( $args),								
+											
+									);														
+																			
+				$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
+					array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
+
+				// Get the last inserted ID
+				$taxo_id = $wpdb->insert_id;	
+
+				// handle terms				
+				$terms = $termsArray[$i] ?? '';
+				if($terms!=''){
+					$terms = explode(',', $terms);
+
+					//loop through terms
+					foreach ( $terms  as $term) {
+
+					}
+
+				}
+
+			}			
+
+			$i++;
+
+		}
+	
 	}
 
 	//--returns the taxonomy from header
@@ -714,27 +813,32 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
 
 			// Get the last inserted ID
-			$taxo_id = $wpdb->insert_id;	
-			
-			//add terms in DB linked with the taxo ID
+			$taxo_id = $wpdb->insert_id;		
+		}
 
-			//--Create custom terms for this taxonomy
-			$term_slug = $term[0] ?? '';
-			$term_name = $term[1] ?? '';
-			//$this->set_taxonomy_terms($tax_field_slug, $term);
-			$new_record = array('term_id' => NULL,
-			                    'term_taxo_slug' 	 => $tax_field_slug,
-								'term_slug' 	 => $term_slug,
-								'term_name' =>ucfirst($term_name)					
-								);														
-																		
-			$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
-				array( '%d', '%s' , '%s' ,'%s' ));
+		$term_slug = $term[0] ?? '';
+		$term_name = $term[1] ?? '';
+		
+		//add terms in DB linked with the taxo ID
+		if($tax_field_slug && $term_slug!='' && $term_name!='' ){		
 			
+			//only add if not exists to avoid duplicated terms
+			if (!$this->term_exists_in_db($tax_field_slug, $term_slug)) {
+
+				$new_record = array('term_id' => NULL,
+									'term_taxo_slug' 	 => $tax_field_slug,
+									'term_slug' 	 => $term_slug,
+									'term_name' =>ucfirst($term_name)					
+									);														
+																			
+				$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
+					array( '%d', '%s' , '%s' ,'%s' ));
+			}
 		}
 	}
 
-	//-- register taxo on init
+
+	//-- register taxo on init dynamically
 	function register_taxonomies() {
 
 		//-- pull up taxo from DB  --- - ---- --
@@ -821,7 +925,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			'edit_item'         => 'Edit '.$singular_name, //singular
 			'view_item'         => 'View '.$singular_name,
 			'add_new_item'      => 'Add New '.$singular_name,
-			'new_item_name'     => 'New '.$singular_name.' Name',
+			'new_item_name'     => 'New '.$singular_name.'',
 			'search_items'      => 'Search '.$name,
 		];
 	
@@ -941,6 +1045,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 	// File upload handler:
 	function download_from_url($url, $meta_slug,  $post_id, $meta_key){
+
+		global $wpdb;
 						
 		$image = file_get_contents($url);			
 		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;		
@@ -969,8 +1075,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 				//find in post_meta by metavalue
 				$file_name_meta = $upload_temp_folder."/".$meta_slug.'.'.$ext;
-
-				global $wpdb;
+				
 				$sql = "Select post_id, meta_key,  meta_value from ". $wpdb->postmeta  ." where meta_value = '".$file_name_meta."' ";
                 $results = $wpdb->get_results($sql);
 				if ( !empty( $results ) ){					
@@ -1048,7 +1153,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         <div class="row item first uploader">
         <div class="col col-9 info mid">
         <div class="row label">'.count($rowsDATA).' posts will be imported</div>
-        <div class="row description">Press start to begin the import process</div>
+        <div class="row description"> '.__('Press start to begin the import process','wp-mosaic-page-generator'). '</div>
         </div>
         <div class="col col-3 click">
             <div class=" msm-btn-steps-bar-steps" id="msm-btn-steps-bar-steps"  >
@@ -1101,10 +1206,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         <div id="progressbar" class="row progress-contain">
         <div class="row labels">
         <div class="col col-6 ">
-             <div class="msrm-stat-count">'. __('Imported') .': <span id="msrm-process-val">0</span> '.__('of') .' <span id="msrm-total-val">'.count($rowsDATA).'</span></div>
+             <div class="msrm-stat-count">'. __('Imported','wp-mosaic-page-generator') .': <span id="msrm-process-val">0</span> '.__('of') .' <span id="msrm-total-val">'.count($rowsDATA).'</span></div>
         </div>
         <div class="col col-6 finish">
-           <div class="progress-label">'.__('Loading...').'</div>
+           <div class="progress-label">'.__('Loading...','wp-mosaic-page-generator').'</div>
         </div>
         </div>
 		</div>';
@@ -1113,7 +1218,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         </div>';
 
 		$html .='<div class="row batch wpm-import-opt-bar" id="wpm-import-opt-bar">';
-			$html .='<span>'.__('Batches').'</span>: <input type="number" id="batch" name="batch" value="3">';
+			$html .='<span>'.__('Batches','wp-mosaic-page-generator').'</span>: <input type="number" id="batch" name="batch" value="3">';
 		
 		$html .='</div>';
 
@@ -1128,8 +1233,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 	public function getPostMetaFieldsColNew( $only_metas)   {			
 		$arrCol = array();		
-		
 		$img_metadata = array('slug');
+
 		foreach ( $only_metas  as $meta_key ) {		
 			if (strpos($meta_key, 'custom_field') !== false) {
 				$cpf_field_type = 1;
@@ -1146,7 +1251,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				}elseif(strpos($meta_key, 'description') !== false){ 
 					$cpf_field_type = 1;
 				}else{
-
 					$cpf_field_type = 0;	//it's the image itself
 				}				
 			}	
@@ -1160,13 +1264,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 	//check if custom field
 	public function is_custom_field( $meta_key)   {	
+
 		if (strpos($meta_key, 'custom_field') !== false) {			
 			return true;
 		}elseif(strpos($meta_key, 'custom_image') !== false){ //image	
 			return true;
 		}elseif(strpos($meta_key, 'custom_tax') !== false){ //taxonomy	
 			return true;
-
 		}else{
 			return false;
 		}		
@@ -1186,7 +1290,6 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			}elseif(strpos($meta_key, 'description') !== false){ 
 				$cpf_field_type = 1;
 			}else{
-
 				$cpf_field_type = 0;	//it's the image itself
 			}				
 		}					
@@ -1203,6 +1306,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			//check if CPT exists
 			if (!$this->cpt_exists_in_db($post_type)){
+
 				$projects_labels = array(
 					'name' => $post_type,
 					'singular_name' => ucfirst($post_type),
@@ -1230,11 +1334,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				$post_type_id = $wpdb->insert_id;									
 				
 			}else{		
-				//update custom fields
+
+				//Update custom fields
 				$post_type_id = $this->mCustomPostType;
+
+				//-- Clean CPF table
+				$this->deleteAllCpf($post_type_id );
 			}
 
-			//lest create the custom fields for this CPT
+			//let's create the custom fields for this CPT
 			foreach ( $fields  as $meta_key => $value ) {
 				$field_name = $meta_key;
 				$field_type = $this->get_field_type($field_name);
@@ -1352,6 +1460,37 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function taxo_exists_in_db($taxo_slug){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies  ' ;			
+		$sql .= ' WHERE tax_slug = "'.$taxo_slug.'"  ' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				$this->mCustomTaxoSlug = $row->tax_id;
+				return true;			
+			}
+		}		
+		return 	  $res;				
+	}
+
+	public function term_exists_in_db($term_taxo_slug, $term_slug ){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms   ' ;			
+		$sql .= ' WHERE term_taxo_slug = "'.$term_taxo_slug.'" AND term_slug = "'.$term_slug.'" ' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				return true;			
+			}
+		}		
+		return 	  $res;				
+	}
+
+	public function getTaxoWithSlug($taxo_slug){
 		global $wpdb;
 		$res = false;
 		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies  ' ;			
@@ -1551,7 +1690,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 
 		$html .= '<div id="wpmp-upload-from-url">';
-		$html .= '<h1 class=" mb-2 ">'.__('Download a File','image-notes-plus-WP').'</h1>	';
+		$html .= '<h1 class=" mb-2 ">'.__('Download a File','wp-mosaic-page-generator').'</h1>	';
 		
 		$html .= '</div>';
 		
@@ -1665,9 +1804,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			
 		);
 		return $custom_col_order;
-	}
-			
-	
+	}	
 
 	function check_if_service_selected($item_selected){
 		$options = $this->get_option('services');
