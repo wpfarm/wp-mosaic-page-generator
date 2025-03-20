@@ -70,13 +70,32 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf',  array( $this, 'delete_cpf' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_delete_cpf_value',  array( $this, 'delete_cpf_value' ));
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_score_rebuild',  array( $this, 'get_post_data_for_analysis' ));
-		add_action('save_post',  array( &$this, 'update_cpt_details' ), 116);
+		add_action( 'save_post',  array( &$this, 'update_cpt_details' ), 116);
+
+		add_action('delete_term',  array( &$this, 'delete_term_hook_function' ), 10, 3);
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
 		}
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
     }
+
+
+	function delete_term_hook_function($term_id, $tt_id, $taxonomy) {
+
+		global $wpdb;
+
+		$term = get_term($term_id, $taxonomy); // Get the term object
+
+		if (!is_wp_error($term) && $term) {
+			$term_slug = $term->slug;
+
+			//delete from table			
+			//$wpdb->delete($wpdb->prefix. "cpt_taxonomy_terms", ['ID' => 123]);
+		}
+
+
+	}
 
 	/**
 	 * Enqueue scripts & add JSON data needed to update the SEO score on existing posts.
@@ -307,9 +326,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$query = '
 			CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'cpt_taxonomy_terms(
 			  `term_id` int(11) NOT NULL AUTO_INCREMENT,	
-			  `term_taxo_slug` varchar(100) NOT NULL,	
-			  `term_slug` varchar(100) NOT NULL,			 
+			  `term_taxo_slug` varchar(200) NOT NULL,			 			 
 			  `term_name` varchar(200) NOT NULL,
+			  `term_slug` varchar(200)  NULL,
 			  PRIMARY KEY (`term_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 			';			
@@ -379,7 +398,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$dir_name = $pathInfo['dirname'];
 		$ext = $pathInfo['extension'];
 		$ext=strtolower($ext);
-		// Check if the URL is Google Sheet "example"
+
 		if (strpos($url, "https://docs.google.com/spreadsheets") !== false) {
 
 			$url = 'https://docs.google.com'.$dir_name.'/export?format=csv';
@@ -468,10 +487,10 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();
 	}
 
-	//this function deletes all custom fields of this CPT by slug
+	//this function deletes all custom fields of this CPT by slug GTYY///8888
 	public function deleteAllCpf($cpt_id){
 		global $wpdb;		
-		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_cpt_id '=>$cpt_id ], [ '%d' ] );		
+		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_cpt_id'=>$cpt_id ], [ '%d' ] );		
 	}
 
 	public function start_import_ajax(){
@@ -580,10 +599,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			update_post_meta( $post_id, 'rank_math_focus_keyword',$keyword );	
 
 			///- we handle taxo and terms
-
 			$this->handleByPostType($taxo, $taxo_terms,  $post_id,  $post_type);
-
-
 
 			$postIDArray[] = $post_id;
 	
@@ -601,12 +617,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 					}elseif($custom_field['cpf_field_type']==2){ //custom taxonomies
 
-						$cpt = $post_type;
-						//$tax_field= $this->get_taxo_from_string($meta_key); // returns the taxonomy slug
-						//$term = $this->get_terms_from_string($val_import ); //returns an array
-
-						//handle taxonomies -- cpt, $tax_field, $term -- This is for updating the db
-						//$this->handle_taxo($post_type, $tax_field, $term);
+						$cpt = $post_type;						
 
 					}else{ //image	
 							
@@ -664,22 +675,26 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		die();				
 	}
 
-	//--returns the taxonomy from header
+   	//-- handles the taxonomies and terms creation in the database
 	function handleByPostType($taxo, $taxo_terms,  $post_id,  $cpt){
+		global $wpdb;		
 
 		$auxCommon = new wpmpgCommon();
+		$auxNewPCT = new WpMosaicCPT();
 
 		$taxoArray = explode(',', $taxo);
 		$termsArray = explode('-', $taxo_terms);
 
+		//get all terms in our system
+
 		$i = 0;
+		foreach ( $taxoArray  as $taxonomy ) {		
 
-		foreach ( $taxoArray  as $taxonomy ) {
-
-			$tax_field_label = ucfirst($taxonomy);
+			$tax_slug = trim(strtolower($taxonomy));
+			$tax_field_label = trim(ucfirst($taxonomy));
 
 			//check if taxonomy exists already
-			if (!$this->taxo_exists_in_db($taxonomy)) {
+			if (!$this->taxo_exists_in_db($tax_slug)) {				
 				
 				$singular_name = $auxCommon->singularize($taxonomy);
 				$name = ucfirst($taxonomy);
@@ -702,47 +717,84 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					'hierarchical'      => true, 
 					'show_admin_column' => true,
 					'show_ui'           => true,
-					'show_in_rest'      => true, // Enable for Gutenberg & API
-					'rewrite'           => ['slug' => $taxonomy],
+					'show_in_rest'      => true, // // ghgh
+					'rewrite'           => ['slug' => $tax_slug],
 				];
 
-				//get CPT 
-				$auxNewPCT = new WpMosaicCPT();
+				//get CPT 				
 				$cpt_row = $auxNewPCT->getCPTWithSlug($cpt);
 
-				$new_record = array('tax_id' => NULL,
-									'tax_cpt_id' 	 => $cpt_row->cpt_id,
-									'tax_cpt_slug' 	 => $cpt,
-									'tax_label' =>ucfirst($tax_field_label),
-									'tax_slug' =>$tax_field_slug,								
-									'tax_properties' => json_encode( $args),								
-											
-									);														
-																			
-				$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
-					array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
+				if($tax_slug != ''){
 
-				// Get the last inserted ID
-				$taxo_id = $wpdb->insert_id;	
+					$available_in_cpt = json_encode( array($cpt));					
+					$new_record = array('tax_id' => NULL,
+										'tax_cpt_id' 	 => $cpt_row->cpt_id,
+										'tax_cpt_slug' 	 => $available_in_cpt, /// available in these CPT
+										'tax_label' =>ucfirst($tax_field_label),
+										'tax_slug' =>$tax_slug,								
+										'tax_properties' => json_encode( $args),								
+												
+										);							
+																				
+					$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
+						array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
 
-				// handle terms				
-				$terms = $termsArray[$i] ?? '';
-				if($terms!=''){
-					$terms = explode(',', $terms);
-
-					//loop through terms
-					foreach ( $terms  as $term) {
-
-					}
-
+					// Get the last inserted ID
+					$taxo_id = $wpdb->insert_id;	
 				}
+				
+			}else{ //taxo exists then we update the availability in CPT			
 
-			}			
+				// get taxo an update CPT slugs: for instance: locations, states etc. They are comma separated
+				$taxo_row = $this->getTaxoWithRowSlug($tax_slug);
+				$current_cpt = json_decode($taxo_row->tax_cpt_slug ,true);
+
+				$taxo_id = $taxo_row->tax_id;	
+
+				if(!in_array($cpt, $current_cpt)) {
+					$current_cpt[] = $cpt;
+				}
+				// update taxonomy with new CTP availability
+				$wpdb->update(
+					$wpdb->prefix . 'cpt_taxonomies',
+					array(
+ 						'tax_cpt_slug' => json_encode($current_cpt),						
+					),
+					array('tax_id' =>$taxo_row->tax_id),
+					array('%s'), // Data types: %s (string), %d (integer)
+					array('%d') // WHERE condition data type
+				);
+			}		
+			
+			// handle terms	for this taxonomy
+			$terms = $termsArray[$i] ?? '';
+			if($terms!=''){
+				$terms = explode(',', $terms);
+
+				//loop through terms
+				foreach ( $terms  as $term) {
+
+					$term = trim(strtolower($term));
+					$term_name = trim(ucwords($term));					
+
+					if($term!='' ){
+
+						$new_record = array(
+							'term_id' => NULL,
+							'term_slug' => NULL,							
+							'term_taxo_slug' => $tax_slug,
+							'term_name' => $term_name,
+							);	
+						
+						$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
+						array( '%d', '%s' , '%s' , '%s' ));
+					}											
+				}
+			}
 
 			$i++;
 
-		}
-	
+		} // end for each taxo
 	}
 
 	//--returns the taxonomy from header
@@ -765,17 +817,17 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		//get all CPT and Custom Taxonomies
 		$taxonomies = get_object_taxonomies($cpt, 'objects');
 		
-		$tax_field_label = ucfirst($tax_field_slug);
+		$tax_field_label = ucwords($tax_field_slug);
 
 		//check if taxonomy exists already
 		if (!$this->taxo_exists_in_db($tax_field_slug)) {
 
 			$auxCommon = new wpmpgCommon();
 			$singular_name = $auxCommon->singularize($tax_field_label);
-			$name = ucfirst($tax_field_label);
+			$name = ucwords($tax_field_label);
 
 			$labels = [
-				'name'              =>  $name, // States --
+				'name'              =>  $name, 
 				'singular_name'     => $singular_name,
 				'menu_name'         => $name,
 				'all_items'         => $name,
@@ -826,20 +878,22 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			if (!$this->term_exists_in_db($tax_field_slug, $term_slug)) {
 
 				$new_record = array('term_id' => NULL,
+									'term_slug' => NULL,
 									'term_taxo_slug' 	 => $tax_field_slug,
 									'term_slug' 	 => $term_slug,
 									'term_name' =>ucfirst($term_name)					
 									);														
 																			
 				$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
-					array( '%d', '%s' , '%s' ,'%s' ));
+					array( '%d', '%s' , '%s' ,'%s'  ,'%s' ));
 			}
 		}
 	}
 
-
 	//-- register taxo on init dynamically
 	function register_taxonomies() {
+
+		global $wpdb;
 
 		//-- pull up taxo from DB  --- - ---- --
 		//----------------------------------------------
@@ -852,11 +906,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			foreach($taxo_registered as $taxo) { 			
 
 				$taxo_slug = $taxo->tax_slug;
-				$cpt = $taxo->tax_cpt_slug;				
+				$cpt = json_decode($taxo->tax_cpt_slug,true);				
 				$labels_data = json_decode($taxo->tax_properties)->labels;	
 				
 				$labels = [
-					'name'              =>  $labels_data->name, // States --
+					'name'              =>  $labels_data->name, 
 					'singular_name'     => $labels_data->singular_name,
 					'menu_name'         => $labels_data->menu_name,
 					'all_items'         =>  $labels_data->all_items,
@@ -877,41 +931,44 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					'rewrite'           => ['slug' => $taxo_slug],
 				];	
 
-				register_taxonomy($taxo_slug, [$cpt], $args);	
+				//Available in CTP
+				register_taxonomy($taxo_slug, $cpt, $args);	
 
-				//
+			} //end foreach taxo
+
+			$terms = $this->getAllTerms();
+			foreach ( $terms  as $term) {
+
+				$taxo_slug = $term->term_taxo_slug;
+				$term_name = $term->term_name ;				
+
+				if($term_name!='' ){
+					if (!term_exists($term_name, $taxo_slug)) {				
+	
+						$result = wp_insert_term($term_name, $taxo_slug);
+
+						$term_id = $result['term_id']; // Get the term ID
+						$new_term=  get_term($term_id, $taxo_slug); // Retrieve and return the full term object
+						$new_slug =  $new_term->slug ;						
+					
+						$wpdb->update(
+							$wpdb->prefix . 'cpt_taxonomy_terms',
+							array(
+								 'term_slug' => $new_slug,						
+							),
+							array('term_id' =>$term->term_id),
+							array('%s'), 
+							array('%d') 
+						);
+
+					}else{ //update slug
+
+						//$term = get_term_by('slug', 'your-term-slug', 'category');	
+					}
+				}									
 			}
 		}
-	}
-
-	//--this function registers the terms right after they have been initiated
-	function set_taxonomy_terms($taxo_slug, $term){
-
-		//--Create custom terms for this taxonomy
-		$term_slug = $term[0] ?? '';
-		$term_name = $term[1] ?? '';		
-
-		if($term_slug!='' && $term_name!=''){
-			if (!term_exists($term_slug, $taxo_slug)) {
-
-				echo "<br>Creating term: ";
-				echo "Term slug: ". $term_slug ;
-				echo "Term Name: ". $term_name ;
-				echo "Taxo slug Name: ". $taxo_slug ;
-
-				echo "<br>";
-
-				$result = wp_insert_term($term_name, $taxo_slug, array('slug' => $term_slug));
-
-				if (is_wp_error($result)) {
-					echo 'Error: ' . $result->get_error_message();
-				} else {
-					echo 'Term inserted successfully!';
-				}
-				
-			}
-		}		
-	}
+	}	
 
 	function register_custom_taxo($taxo_slug, $name, $cpt) {
 		$auxCommon = new wpmpgCommon();
@@ -952,9 +1009,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 		if (!$post) {
 			wp_send_json_error(['message' => 'Post not found']);
-		}
-	
-		// Prepare post data
+		}	
+		
 		$post_data = [
 			'title'   => $post->post_title,
 			'content' => $post->post_content,
@@ -1475,10 +1531,34 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		return 	  $res;				
 	}
 
+	public function getTaxoWithSlug($taxo_slug){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies  ' ;			
+		$sql .= ' WHERE tax_slug = "'.$taxo_slug.'"  ' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				$this->mCustomTaxoSlug = $row->tax_id;
+				return $row;			
+			}
+		}		
+				
+	}
+
+	public function getAllTerms(){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms ' ;					
+	    return  $wpdb->get_results($sql);			
+				
+	}
+
 	public function term_exists_in_db($term_taxo_slug, $term_slug ){
 		global $wpdb;
 		$res = false;
-		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms   ' ;			
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms ' ;			
 		$sql .= ' WHERE term_taxo_slug = "'.$term_taxo_slug.'" AND term_slug = "'.$term_slug.'" ' ;	
 				
 		$res = $wpdb->get_results($sql);		
@@ -1490,20 +1570,17 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		return 	  $res;				
 	}
 
-	public function getTaxoWithSlug($taxo_slug){
+	public function getTaxoWithRowSlug($taxo_slug){
 		global $wpdb;
 		$res = false;
 		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomies  ' ;			
-		$sql .= ' WHERE tax_slug = "'.$taxo_slug.'"' ;	
-				
+		$sql .= ' WHERE tax_slug = "'.$taxo_slug.'"' ;					
 		$res = $wpdb->get_results($sql);		
 		if ( !empty( $res ) ){
-			foreach ( $res as $row ){
-				$this->mCustomTaxoSlug = $row->tax_id;
-				return true;			
+			foreach ( $res as $row ){				
+				return $row;			
 			}
-		}		
-		return 	  $res;				
+		}					
 	}
 
 	public function cpt_exists($cpt){

@@ -17,8 +17,7 @@ if(isset($_GET['cpt_id']) && $_GET['cpt_id']!=''){
     $cpf_id = sanitize_text_field($_GET['cpf_id']);	
 	$cpf = $auxNewPCT->get_one_cpf($cpf_id);
  
-}else{ 
-	
+}else{ 	
   $message =  '<div class="wpmpg-ultra-warning"><span><i class="fa fa-check"></i>'.__("Oops! Invalid CPT.",'wp-mosaic-page-generator').'</span></div>';
   echo wp_kses($message, $wpmpg->allowed_html);
   exit;		
