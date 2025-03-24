@@ -72,7 +72,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action( 'wp_ajax_'.$this->ajax_prefix.'_start_score_rebuild',  array( $this, 'get_post_data_for_analysis' ));
 		add_action( 'save_post',  array( &$this, 'update_cpt_details' ), 116);
 
-		add_action('delete_term',  array( &$this, 'delete_term_hook_function' ), 10, 3);
+		add_action('delete_term',  array( &$this, 'delete_term_hook_function' ), 19, 3);
 
 		if (is_plugin_active('seo-by-rank-math/rank-math.php')) {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
@@ -85,15 +85,24 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		global $wpdb;
 
+		echo "called hook ".$term_id ;
+		echo "taxo ".$taxonomy ;
+
 		$term = get_term($term_id, $taxonomy); // Get the term object
+
+		$term = get_term_by('id', $term_id, $taxonomy);
+
+		print_r($term);
 
 		if (!is_wp_error($term) && $term) {
 			$term_slug = $term->slug;
 
 			//delete from table			
-			//$wpdb->delete($wpdb->prefix. "cpt_taxonomy_terms", ['ID' => 123]);
-		}
+			$wpdb->delete($wpdb->prefix. "cpt_taxonomy_terms", ['term_slug' => $term_slug]);
 
+			echo "Delete Term ". $term_slug;
+
+		}
 
 	}
 
@@ -1058,7 +1067,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 			}
 		}
-	
+
 		return $seo_score;
 	}
 
@@ -1138,8 +1147,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					foreach ( $results as $item ){
 						$attacment_id = $item->post_id;						
 						wp_delete_post($attacment_id,true) ;
-						delete_post_meta( $attacment_id, $meta_key );									
-					
+						delete_post_meta( $attacment_id, $meta_key );								
 					}	
 				}			
 			}			
