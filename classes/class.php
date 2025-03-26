@@ -82,28 +82,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 
 	function delete_term_hook_function($term_id, $tt_id, $taxonomy) {
-
-		global $wpdb;
-
-		echo "called hook ".$term_id ;
-		echo "taxo ".$taxonomy ;
-
-		$term = get_term($term_id, $taxonomy); // Get the term object
-
-		$term = get_term_by('id', $term_id, $taxonomy);
-
-		print_r($term);
-
-		if (!is_wp_error($term) && $term) {
-			$term_slug = $term->slug;
-
-			//delete from table			
-			$wpdb->delete($wpdb->prefix. "cpt_taxonomy_terms", ['term_slug' => $term_slug]);
-
-			echo "Delete Term ". $term_slug;
-
-		}
-
+		require_once(ABSPATH . 'wp-load.php');
+		global $wpdb;	
+		$wpdb->delete($wpdb->prefix. "cpt_taxonomy_terms", ['term_wp_id' => $term_id]);	
 	}
 
 	/**
@@ -337,7 +318,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			  `term_id` int(11) NOT NULL AUTO_INCREMENT,	
 			  `term_taxo_slug` varchar(200) NOT NULL,			 			 
 			  `term_name` varchar(200) NOT NULL,
-			  `term_slug` varchar(200)  NULL,
+			  `term_wp_id` varchar(11)  NULL,
 			  PRIMARY KEY (`term_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 			';			
@@ -790,18 +771,37 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 						$new_record = array(
 							'term_id' => NULL,
-							'term_slug' => NULL,							
+							'term_wp_id' => NULL,							
 							'term_taxo_slug' => $tax_slug,
 							'term_name' => $term_name,
 							);	
 						
 						$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
 						array( '%d', '%s' , '%s' , '%s' ));
+
+						$db_term_id = $wpdb->insert_id;
+
+
+						//create terms in WP
+						$term_id = $this->insert_wp_term_optional($term_name, $tax_slug,  false);
+
+						$wpdb->update(
+									$wpdb->prefix . 'cpt_taxonomy_terms',
+									array(
+										'term_wp_id' => $term_id,						
+									),
+									array('term_id' =>$db_term_id),
+									array('%s'), 
+									array('%d') 
+								);
+
 					}											
 				}
 			}
 
 			$i++;
+
+
 
 		} // end for each taxo
 	}
@@ -819,85 +819,80 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		return $termArray;
 	}
 
-	//--creates taxonomy in mosaic plugin table -- 
-	function handle_taxo($cpt, $tax_field_slug , $term = array()){
+	
+
+	function insert_wp_term_optional($term, $taxonomy, $args = [], $update_if_exists = false) {
 		global $wpdb;
-
-		//get all CPT and Custom Taxonomies
-		$taxonomies = get_object_taxonomies($cpt, 'objects');
-		
-		$tax_field_label = ucwords($tax_field_slug);
-
-		//check if taxonomy exists already
-		if (!$this->taxo_exists_in_db($tax_field_slug)) {
-
-			$auxCommon = new wpmpgCommon();
-			$singular_name = $auxCommon->singularize($tax_field_label);
-			$name = ucwords($tax_field_label);
-
-			$labels = [
-				'name'              =>  $name, 
-				'singular_name'     => $singular_name,
-				'menu_name'         => $name,
-				'all_items'         => $name,
-				'edit_item'         => $singular_name, 
-				'view_item'         => $singular_name,
-				'add_new_item'      => $singular_name,
-				'new_item_name'     => $singular_name.'',
-				'search_items'      => $name,
-			];
-		
-			$args = [
-				'labels'            => $labels,
-				'public'            => true,
-				'hierarchical'      => true, 
-				'show_admin_column' => true,
-				'show_ui'           => true,
-				'show_in_rest'      => true, // Enable for Gutenberg & API
-				'rewrite'           => ['slug' => $tax_field_slug],
-			];
-
-			//get CPT 
-			$auxNewPCT = new WpMosaicCPT();
-			$cpt_row = $auxNewPCT->getCPTWithSlug($cpt);
-
-			$new_record = array('tax_id' => NULL,
-			                    'tax_cpt_id' 	 => $cpt_row->cpt_id,
-								'tax_cpt_slug' 	 => $cpt,
-								'tax_label' =>ucfirst($tax_field_label),
-								'tax_slug' =>$tax_field_slug,								
-								'tax_properties' => json_encode( $args),								
-										
-								);														
-																		
-			$wpdb->insert( $wpdb->prefix .'cpt_taxonomies', $new_record, 
-				array( '%d', '%s' , '%s' ,'%s' , '%s' , '%s'));
-
-			// Get the last inserted ID
-			$taxo_id = $wpdb->insert_id;		
-		}
-
-		$term_slug = $term[0] ?? '';
-		$term_name = $term[1] ?? '';
-		
-		//add terms in DB linked with the taxo ID
-		if($tax_field_slug && $term_slug!='' && $term_name!='' ){		
-			
-			//only add if not exists to avoid duplicated terms
-			if (!$this->term_exists_in_db($tax_field_slug, $term_slug)) {
-
-				$new_record = array('term_id' => NULL,
-									'term_slug' => NULL,
-									'term_taxo_slug' 	 => $tax_field_slug,
-									'term_slug' 	 => $term_slug,
-									'term_name' =>ucfirst($term_name)					
-									);														
-																			
-				$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
-					array( '%d', '%s' , '%s' ,'%s'  ,'%s' ));
+	
+		// Sanitize the term and generate the slug using sanitize_title
+		$slug = sanitize_title($term);
+	
+		// Check if the slug already exists in the database
+		$existing_slug = $wpdb->get_var($wpdb->prepare(
+			"SELECT COUNT(*) FROM {$wpdb->terms} WHERE slug = %s",
+			$slug
+		));
+	
+		// If the slug already exists, modify it to ensure uniqueness
+		if ($existing_slug) {
+			$original_slug = $slug;
+			$counter = 1;
+			while ($existing_slug) {
+				$slug = $original_slug . '-' . $counter; // Append a counter to make the slug unique
+				$existing_slug = $wpdb->get_var($wpdb->prepare(
+					"SELECT COUNT(*) FROM {$wpdb->terms} WHERE slug = %s",
+					$slug
+				));
+				$counter++;
 			}
 		}
+	
+		// Check if the term exists
+		$existing_term = $wpdb->get_row($wpdb->prepare(
+			"SELECT term_id FROM {$wpdb->terms} AS t
+			INNER JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id
+			WHERE t.name = %s AND tt.taxonomy = %s",
+			$term, $taxonomy
+		));
+	
+		if ($existing_term) {
+			if ($update_if_exists) {
+				// Update the term name and slug
+				$wpdb->update(
+					$wpdb->terms,
+					['name' => $term, 'slug' => $slug], // Use the sanitized unique slug
+					['term_id' => $existing_term->term_id]
+				);
+				// Update term taxonomy if needed
+				$wpdb->update(
+					$wpdb->term_taxonomy,
+					$args,
+					['term_id' => $existing_term->term_id, 'taxonomy' => $taxonomy]
+				);
+			}
+			return $existing_term->term_id;
+		}
+	
+		// Insert new term
+		$wpdb->insert(
+			$wpdb->terms,
+			['name' => $term, 'slug' => $slug] // Use the sanitized unique slug
+		);
+	
+		if (!$wpdb->insert_id) {
+			return new WP_Error('db_insert_error', __('Could not insert term into database.'));
+		}
+	
+		$term_id = $wpdb->insert_id;
+	
+		// Insert term taxonomy
+		$args['term_id'] = $term_id;
+		$args['taxonomy'] = $taxonomy;
+		$wpdb->insert($wpdb->term_taxonomy, $args);
+	
+		return $term_id;
 	}
+
 
 	//-- register taxo on init dynamically
 	function register_taxonomies() {
@@ -954,21 +949,21 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				if($term_name!='' ){
 					if (!term_exists($term_name, $taxo_slug)) {				
 	
-						$result = wp_insert_term($term_name, $taxo_slug);
+						//$result = wp_insert_term($term_name, $taxo_slug);
 
-						$term_id = $result['term_id']; // Get the term ID
-						$new_term=  get_term($term_id, $taxo_slug); // Retrieve and return the full term object
-						$new_slug =  $new_term->slug ;						
+						//$term_id = $result['term_id']; // Get the term ID
+						//$new_term=  get_term($term_id, $taxo_slug); // Retrieve and return the full term object
+						//$new_id =  $new_term->term_id ;						
 					
-						$wpdb->update(
+						/*$wpdb->update(
 							$wpdb->prefix . 'cpt_taxonomy_terms',
 							array(
-								 'term_slug' => $new_slug,						
+								 'term_wp_id' => $term_id,						
 							),
 							array('term_id' =>$term->term_id),
 							array('%s'), 
 							array('%d') 
-						);
+						);*/
 
 					}else{ //update slug
 
@@ -979,6 +974,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		}
 	}	
 
+
+	
 	function register_custom_taxo($taxo_slug, $name, $cpt) {
 		$auxCommon = new wpmpgCommon();
 		$singular_name = $auxCommon->singularize($name);
@@ -2262,7 +2259,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					$plugin_file_path = plugin_dir_path( __DIR__ ) . 'index.php'; 
 					
 					$plugin_data = get_plugin_data( $plugin_file_path );
-					_e('Plugin Version:','wp-mosaic-page-generator') . $plugin_data['Version'] ;
+					$plugin_version = $plugin_data['Version'];
+					_e('Plugin Version:','wp-mosaic-page-generator') .$plugin_version  ;
 					?>
 				</span>
 				<?php _e('Page Generator','wp-mosaic-page-generator')?></span>
