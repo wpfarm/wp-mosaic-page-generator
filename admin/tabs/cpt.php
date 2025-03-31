@@ -26,8 +26,8 @@ $auxCPF = new WpMosaicCPT();
                <tr>
                    <th width="2%"><?php _e('#', 'wp-mosaic-page-generator'); ?></th>
                    <th><?php _e('Name', 'wp-mosaic-page-generator'); ?></th>  
-                   <th><?php _e('Unique Post Type Slug', 'wp-mosaic-page-generator'); ?></th> 
-                   <th><?php _e('Custom Post Fields', 'wp-mosaic-page-generator'); ?></th>   
+                   <th><?php _e('Slug', 'wp-mosaic-page-generator'); ?></th> 
+                   <th><?php _e('Fields', 'wp-mosaic-page-generator'); ?></th>   
                    <th><?php _e('Taxonomies', 'wp-mosaic-page-generator'); ?></th>                
                    <th><?php _e('Actions', 'wp-mosaic-page-generator'); ?></th>                   
                    
@@ -37,6 +37,7 @@ $auxCPF = new WpMosaicCPT();
            <tbody>
            
            <?php 
+           $auxTaxo = new WpMosaicTaxo();
            $i = 1;
            foreach($cptRows as $cpt) {  
             
@@ -44,7 +45,8 @@ $auxCPF = new WpMosaicCPT();
             $cpf_qty = count($cptCPFRows);
 
             //get taxonomies
-            $taxo_qty = 0;
+            $taxoPerCPT = $auxTaxo->getCTPTaxo($cpt->cpt_unique_key);
+            $taxo_qty = count( $taxoPerCPT);
               
            ?>            
                <tr id="acc-row-<?php echo $cpt->cpt_id?>">
@@ -52,8 +54,9 @@ $auxCPF = new WpMosaicCPT();
                    <td><?php echo esc_attr($cpt->cpt_name); ?></td>  
                    <td><?php echo esc_attr($cpt->cpt_unique_key); ?></td> 
                    <td><?php echo $cpf_qty; ?></td>  
-                   <td><?php echo $taxo_qty; ?></td>                 
+                   <td> <a class="left" href="?page=wpmpg&tab=cpt-taxo&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Taxonomies','wp-mosaic-page-generator'); ?>"><?php echo $taxo_qty; ?></a> </td>                 
                    <td>
+                   <a class="left" href="?page=wpmpg&tab=cpt-taxo&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('See Taxonomies','wp-mosaic-page-generator'); ?>">See Taxonomies</a>
                     <a class="left" href="?page=wpmpg&tab=cpt-cpf&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Fields','wp-mosaic-page-generator'); ?>">Edit Fields</a>                       
                        
                     <a class="right edit outline" href="?page=wpmpg&tab=cpt-edit&id=<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Edit','wp-mosaic-page-generator'); ?>">

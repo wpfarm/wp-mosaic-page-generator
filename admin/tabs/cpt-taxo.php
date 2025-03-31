@@ -6,7 +6,7 @@ $auxNewPCT = new WpMosaicCPT();
 if(isset($_GET['id']) && $_GET['id']!=''){	
 	$cpt_id = sanitize_text_field($_GET['id']);	
 	$cpt = $auxNewPCT->get_one($cpt_id);
-    $cpt_att = json_decode($cpt->cpt_properties);
+    $cpt_slug = $cpt->cpt_unique_key;
    
     if(!isset($cpt->cpt_id)){
         echo 'error';
@@ -18,7 +18,8 @@ if(isset($_GET['id']) && $_GET['id']!=''){
   echo wp_kses($message, $wpmpg->allowed_html);
   exit;		
 }
-$cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );        
+$auxTaxo = new WpMosaicTaxo();
+$cptRows = $auxTaxo->getCTPTaxo($cpt_slug );        
 ?>
 <div class="wpmpg-welcome-panel">
     <div class="row item first uploader">
@@ -27,8 +28,8 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
             <div class="row description"><?php _e('Here you can manage taxonomies created by the plugin.', 'wp-mosaic-page-generator'); ?></div>
         </div>
         <div class="col col-3 click">
-            <a href="?page=wpmpg&tab=cpt-cpf-add&cpt_id=<?php echo $cpt_id?>">
-                <button type="button"><?php _e('Create New', 'wp-mosaic-page-generator'); ?></button>
+            <a href="?page=wpmpg&tab=cpt">
+                <button type="button"><?php _e('Back', 'wp-mosaic-page-generator'); ?></button>
             </a>
         </div>
     </div>      
@@ -39,7 +40,7 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
            <thead>
                <tr>
                    <th width="2%"><?php _e('#', 'wp-mosaic-page-generator'); ?></th>
-                   <th><?php _e('Name', 'wp-mosaic-page-generator'); ?></th>  
+                   <th><?php _e('Label', 'wp-mosaic-page-generator'); ?></th>  
                    <th><?php _e('Slug', 'wp-mosaic-page-generator'); ?></th> 
                    <th><?php _e('Terms', 'wp-mosaic-page-generator'); ?></th>               
                    <th class="actions"><?php _e('Actions', 'wp-mosaic-page-generator'); ?></th>                   
@@ -48,19 +49,19 @@ $cptRows = $auxNewPCT->get_all_custom_fields($cpt_id );
            <tbody>           
            <?php 
            $i = 1;
-           foreach($cptRows as $cpt) {              
+           foreach($cptRows as $cpt) {   
+            
+            $terms = count($auxTaxo ->getTaxpTerms($cpt->tax_slug ));
            ?>             
 
-               <tr id="acc-row-<?php echo $cpt->cpf_id ?>">
+               <tr id="acc-row-<?php echo $cpt->tax_id ?>">
                    <td><?php echo  $i; ?></td>
-                   <td><?php echo esc_attr($cpt->cpf_field_name); ?></td> 
-                   <td><?php echo esc_attr($cpt->cpf_field_label); ?></td>  
-                   <td><?php echo esc_attr($cpt->cpf_slug); ?></td>                                  
+                   <td><?php echo esc_attr($cpt->tax_label); ?></td> 
+                   <td><?php echo esc_attr($cpt->tax_slug ); ?></td>  
+                   <td><?php echo $terms; ?></td>                                  
                    <td class="actions">&nbsp;
-                   <a class="right edit outline" href="?page=wpmpg&tab=cpt-cpf-edit&cpf_id=<?php echo esc_attr($cpt->cpf_id)?>&cpt_id=<?php echo esc_attr($cpt_id)?>"   title="<?php _e('Edit','wp-mosaic-page-generator'); ?>">
-                       <img src="<?php echo plugins_url( 'images/icon-settings.svg', dirname( __FILE__ ) ); ?>">
-                    </a>  
-                   <a href="#" class="right delete wpmpg-int-delete-acc-val"  acc-id="<?php echo esc_attr($cpt->cpf_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a></td>
+                   <a class="left" href="?page=wpmpg&tab=cpt-terms&slug=<?php echo esc_attr($cpt->tax_slug)?>"   title="<?php _e('See Terms','wp-mosaic-page-generator'); ?>">See Terms</a>
+                   </td>
                </tr>              
                
                <?php

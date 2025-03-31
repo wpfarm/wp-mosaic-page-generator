@@ -1,5 +1,5 @@
 var $ = jQuery;
-let rtime = 4000;
+let rtime = 6000;
 let mmrunningstatus_mosaic = 1;
 let time = 0;
 let interval;

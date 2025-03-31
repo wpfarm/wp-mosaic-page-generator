@@ -61,6 +61,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		add_action('admin_menu', array(&$this, 'add_menu'), 11);
 		add_action('admin_head', array(&$this, 'admin_head'), 13 );
 		add_action('admin_init', array(&$this, 'admin_init'), 15);	
+		add_action('admin_init', array(&$this, 'auto_add_status_column_to_cpts'), 17);	
+
+
 		add_action('add_meta_boxes', array($this, 'post_add_meta_box' ));	
 		add_action('init', array($this, 'ini_group_modules_pro'));	
 		add_action('init', array($this, 'register_taxonomies'));	
@@ -78,8 +81,34 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			add_action('admin_enqueue_scripts', array(&$this, 'enqueue'), 12);			
 		}
 		add_action('admin_enqueue_scripts', array(&$this, 'add_styles'), 14);
+
     }
 
+
+	function auto_add_status_column_to_cpts() {
+		global $wpdb;
+	
+		// Get all registered Custom Post Types (CPTs) dynamically
+		$cpts = $wpdb->get_col("SELECT DISTINCT post_type FROM {$wpdb->posts} WHERE post_type NOT IN ('post', 'page', 'attachment')");
+	
+		if (!empty($cpts)) {
+			foreach ($cpts as $cpt) {
+				// Add the "Status" column
+				add_filter("manage_edit-{$cpt}_columns", function ($columns) {
+					$columns['custom_status'] = __('Status', 'wp-mosaic-page-generator');
+					return $columns;
+				});
+	
+				// Populate the "Status" column
+				add_action("manage_{$cpt}_posts_custom_column", function ($column, $post_id) {
+					if ($column === 'custom_status') {
+						$status = get_post_status($post_id);
+						echo '<span class="post-status">' . ucfirst($status) . '</span>';
+					}
+				}, 10, 2);
+			}
+		}
+	}
 
 	function delete_term_hook_function($term_id, $tt_id, $taxonomy) {
 		require_once(ABSPATH . 'wp-load.php');
@@ -319,6 +348,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			  `term_taxo_slug` varchar(200) NOT NULL,			 			 
 			  `term_name` varchar(200) NOT NULL,
 			  `term_wp_id` varchar(11)  NULL,
+			  `term_wp_slug` varchar(200) NULL,
 			  PRIMARY KEY (`term_id`)
 			) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 			';			
@@ -677,6 +707,17 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 		//get all terms in our system
 
+		$all_terms_array = array();
+
+		$terms = $this->getAllTerms();
+		foreach ( $terms  as $term) {
+
+			$taxo_slug = $term->term_taxo_slug;
+			$term_name = $term->term_name ;	
+			$all_terms_array[] = array('taxo_slug' => $taxo_slug, 'term_name' => $term_name );														
+		}
+				
+
 		$i = 0;
 		foreach ( $taxoArray  as $taxonomy ) {		
 
@@ -765,45 +806,81 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				foreach ( $terms  as $term) {
 
 					$term = trim(strtolower($term));
-					$term_name = trim(ucwords($term));					
+					$term_name = trim(ucwords($term));		
 
-					if($term!='' ){
+					$already_created = $this->term_exists_in_db($tax_slug, $term_name  );			
 
+					if($term!='' && !$already_created){
 						$new_record = array(
 							'term_id' => NULL,
-							'term_wp_id' => NULL,							
+							'term_wp_id' => NULL,	
+							'term_wp_slug' => NULL,							
 							'term_taxo_slug' => $tax_slug,
 							'term_name' => $term_name,
 							);	
 						
 						$wpdb->insert( $wpdb->prefix .'cpt_taxonomy_terms', $new_record, 
-						array( '%d', '%s' , '%s' , '%s' ));
+						array( '%d', '%s' , '%s' , '%s' , '%s' ));
 
 						$db_term_id = $wpdb->insert_id;
+						$term_wp =  $this->insert_wp_term_optional($post_id, $term_name, $tax_slug,  false);
 
-
-						//create terms in WP
-						$term_id = $this->insert_wp_term_optional($term_name, $tax_slug,  false);
-
+						$term_id =$term_wp['term_id'];
+						$term_slug =$term_wp['slug'];
+					
 						$wpdb->update(
 									$wpdb->prefix . 'cpt_taxonomy_terms',
 									array(
-										'term_wp_id' => $term_id,						
+										'term_wp_id' => $term_id,	
+										'term_wp_slug' => $term_slug,					
 									),
 									array('term_id' =>$db_term_id),
-									array('%s'), 
+									array('%s', '%s'), 
 									array('%d') 
 								);
 
-					}											
-				}
+					}elseif($term!='' && $already_created){
+						
+
+						//term exists, however we need to link it to the post							
+						$term_in_db = $this->get_term_in_db($tax_slug, $term_name);
+						$term_wp_slug =  $term_in_db->term_wp_slug;
+
+						$existing_term = get_term_by('slug',$term_wp_slug, $tax_slug);
+						$term_id  = $existing_term->term_id ;
+
+						// Get existing terms
+						$existing_terms = wp_get_object_terms($post_id, $tax_slug, ['fields' => 'names']);
+						//$existing_terms = $this->get_object_terms_sql($post_id, $tax_slug);
+
+						// Merge with new terms
+						$new_terms = array_merge($existing_terms, [$term_id]);
+
+						// Assign the term to the post
+						//wp_set_object_terms($post_id, $term_id , $tax_slug,true);		
+
+						$this->assignTermToPost($post_id, $term_id, $tax_slug);
+
+					}					
+					
+				} //end for each terms
 			}
 
 			$i++;
 
-
-
 		} // end for each taxo
+	}
+
+	function checkTermAlreadyInDb($tax_slug, $term_name, $all_terms_array){
+
+		$ret = false;
+		foreach ( $all_terms_array  as $term) {
+
+			if( $term['taxo_slug'] == $tax_slug &&  $term['term_name'] == $term_name){
+				return true;
+			}
+		}
+		return $ret;
 	}
 
 	//--returns the taxonomy from header
@@ -817,11 +894,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	function get_terms_from_string($str){
 		$termArray = explode('-', $str);
 		return $termArray;
-	}
+	}	
 
-	
-
-	function insert_wp_term_optional($term, $taxonomy, $args = [], $update_if_exists = false) {
+	function insert_wp_term_optional($post_id, $term, $taxonomy, $args = [], $update_if_exists = false) {
 		global $wpdb;
 	
 		// Sanitize the term and generate the slug using sanitize_title
@@ -848,12 +923,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		}
 	
 		// Check if the term exists
-		$existing_term = $wpdb->get_row($wpdb->prepare(
-			"SELECT term_id FROM {$wpdb->terms} AS t
+		$sql = "SELECT t.term_id, tt.term_id , t.name,  tt.taxonomy FROM {$wpdb->terms} AS t
 			INNER JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id
-			WHERE t.name = %s AND tt.taxonomy = %s",
-			$term, $taxonomy
-		));
+			WHERE t.name = %s AND tt.taxonomy = %s";
+		$existing_term = $wpdb->get_row($wpdb->prepare($sql	,$term, $taxonomy));
+
 	
 		if ($existing_term) {
 			if ($update_if_exists) {
@@ -870,7 +944,12 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 					['term_id' => $existing_term->term_id, 'taxonomy' => $taxonomy]
 				);
 			}
-			return $existing_term->term_id;
+
+			// Assign the term to the post
+			$this->assignTermToPost($post_id, $existing_term->term_id, $taxonomy);
+
+			$ret_array = array('term_id' =>  $existing_term->term_id, 'slug' =>  $existing_term->slug);
+			return $ret_array;
 		}
 	
 		// Insert new term
@@ -883,14 +962,90 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 			return new WP_Error('db_insert_error', __('Could not insert term into database.'));
 		}
 	
-		$term_id = $wpdb->insert_id;
+		$term_id = $wpdb->insert_id;		
 	
 		// Insert term taxonomy
 		$args['term_id'] = $term_id;
 		$args['taxonomy'] = $taxonomy;
-		$wpdb->insert($wpdb->term_taxonomy, $args);
+		$wpdb->insert($wpdb->term_taxonomy, $args);		
+		
+		$term_taxo_id = $wpdb->insert_id;
+
+		// Get existing terms
+
+		// Get existing terms
+		$existing_terms = array();
+
+
+		$this->assignTermToPost($post_id, $term_id, $taxonomy);
+
+		$ret_array = array('term_id' => $term_id, 'slug' =>$slug );
+		return $ret_array;
+	}
+
+	function assignTermToPost($post_id, $term_id, $taxonomy){
+
+		global $wpdb;
+
+		// SQL query to get term names for a given term ID and taxonomy
+		$query = $wpdb->prepare(
+			"SELECT t.name , tt.term_taxonomy_id
+			 FROM {$wpdb->terms} AS t
+			 INNER JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id			
+			 WHERE t.term_id = %d AND tt.taxonomy = %s",
+			$term_id,
+			$taxonomy
+		);
+
+		$results = $wpdb->get_row($query);	
+
+		if($results){
+
+			$term_taxonomy_id = $results->term_taxonomy_id;
+			//check if already created
+			$query = $wpdb->prepare(
+					"SELECT * FROM {$wpdb->term_relationships} 	 WHERE object_id = %d AND term_taxonomy_id = %d",
+				$post_id,
+				$term_taxonomy_id
+			);
+
+			$relationResult = $wpdb->get_row($query);
+			
+			if(!$relationResult){
+				// Insert term taxonomy if it doesn't exist
+				$args['object_id'] = $post_id;
+				$args['term_taxonomy_id'] = $term_taxonomy_id;
+				$wpdb->insert($wpdb->term_relationships, $args);
+				$term_rel_id = $wpdb->insert_id;
+
+			}	
+		}	
+
+	}
+
+	function get_object_terms_sql($post_id, $taxonomy) {
+		global $wpdb;
 	
-		return $term_id;
+		// Validate taxonomy
+		if (!taxonomy_exists($taxonomy)) {
+			//return new WP_Error('invalid_taxonomy', 'Invalid taxonomy.');
+		}
+	
+		// SQL query to get term names for a given post ID and taxonomy
+		$query = $wpdb->prepare(
+			"SELECT t.name 
+			 FROM {$wpdb->terms} AS t
+			 INNER JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id
+			 INNER JOIN {$wpdb->term_relationships} AS tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+			 WHERE tr.object_id = %d AND tt.taxonomy = %s",
+			$post_id,
+			$taxonomy
+		);
+	
+		// Fetch results
+		$results = $wpdb->get_col($query);
+	
+		return $results ?: []; // Return empty array if no terms found
 	}
 
 
@@ -940,37 +1095,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 
 			} //end foreach taxo
 
-			$terms = $this->getAllTerms();
-			foreach ( $terms  as $term) {
-
-				$taxo_slug = $term->term_taxo_slug;
-				$term_name = $term->term_name ;				
-
-				if($term_name!='' ){
-					if (!term_exists($term_name, $taxo_slug)) {				
-	
-						//$result = wp_insert_term($term_name, $taxo_slug);
-
-						//$term_id = $result['term_id']; // Get the term ID
-						//$new_term=  get_term($term_id, $taxo_slug); // Retrieve and return the full term object
-						//$new_id =  $new_term->term_id ;						
-					
-						/*$wpdb->update(
-							$wpdb->prefix . 'cpt_taxonomy_terms',
-							array(
-								 'term_wp_id' => $term_id,						
-							),
-							array('term_id' =>$term->term_id),
-							array('%s'), 
-							array('%d') 
-						);*/
-
-					}else{ //update slug
-
-						//$term = get_term_by('slug', 'your-term-slug', 'category');	
-					}
-				}									
-			}
+			
 		}
 	}	
 
@@ -1279,7 +1404,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
         </div>';
 
 		$html .='<div class="row batch wpm-import-opt-bar" id="wpm-import-opt-bar">';
-			$html .='<span>'.__('Batches','wp-mosaic-page-generator').'</span>: <input type="number" id="batch" name="batch" value="3">';
+			$html .='<span>'.__('Batches','wp-mosaic-page-generator').'</span>: <input type="number" id="batch" name="batch" value="2">';
 		
 		$html .='</div>';
 
@@ -1560,11 +1685,11 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				
 	}
 
-	public function term_exists_in_db($term_taxo_slug, $term_slug ){
+	public function term_exists_in_db($term_taxo_slug, $term_name  ){
 		global $wpdb;
 		$res = false;
 		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms ' ;			
-		$sql .= ' WHERE term_taxo_slug = "'.$term_taxo_slug.'" AND term_slug = "'.$term_slug.'" ' ;	
+		$sql .= ' WHERE term_taxo_slug = "'.$term_taxo_slug.'" AND term_name  = "'.$term_name .'" ' ;	
 				
 		$res = $wpdb->get_results($sql);		
 		if ( !empty( $res ) ){
@@ -1572,9 +1697,25 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 				return true;			
 			}
 		}		
-		return 	  $res;				
+		return  $res;				
 	}
 
+	public function get_term_in_db($term_taxo_slug, $term_name  ){
+		global $wpdb;
+		$res = false;
+		$sql = ' SELECT * FROM ' . $wpdb->prefix . 'cpt_taxonomy_terms ' ;			
+		$sql .= ' WHERE term_taxo_slug = "'.$term_taxo_slug.'" AND term_name  = "'.$term_name .'" ' ;	
+				
+		$res = $wpdb->get_results($sql);		
+		if ( !empty( $res ) ){
+			foreach ( $res as $row ){
+				return $row ;			
+			}
+		}		
+		return  $res;				
+	}
+
+	
 	public function getTaxoWithRowSlug($taxo_slug){
 		global $wpdb;
 		$res = false;
@@ -2256,11 +2397,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 					}
 
-					$plugin_file_path = plugin_dir_path( __DIR__ ) . 'index.php'; 
-					
-					$plugin_data = get_plugin_data( $plugin_file_path );
-					$plugin_version = $plugin_data['Version'];
-					_e('Plugin Version:','wp-mosaic-page-generator') .$plugin_version  ;
+										
+					_e('Plugin Version: ','wp-mosaic-page-generator')  ;
+					echo $this->version;
 					?>
 				</span>
 				<?php _e('Page Generator','wp-mosaic-page-generator')?></span>
