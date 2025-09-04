@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 $auxNewPCT = new WpMosaicCPT(); 
 if(isset($_GET['id']) && $_GET['id']!=''){	
 	$cpt_id = sanitize_text_field($_GET['id']);	
-	$cpt = $auxNewPCT->get_one($cpt_id);
+	$cpt = $auxNewPCT->getCPTWithSlug($cpt_id);
     $cpt_slug = $cpt->cpt_unique_key;
    
     if(!isset($cpt->cpt_id)){
@@ -49,8 +49,7 @@ $cptRows = $auxTaxo->getCTPTaxo($cpt_slug );
            <tbody>           
            <?php 
            $i = 1;
-           foreach($cptRows as $cpt) {   
-            
+           foreach($cptRows as $cpt) {               
             $terms = count($auxTaxo ->getTaxpTerms($cpt->tax_slug ));
            ?>             
 
@@ -60,8 +59,9 @@ $cptRows = $auxTaxo->getCTPTaxo($cpt_slug );
                    <td><?php echo esc_attr($cpt->tax_slug ); ?></td>  
                    <td><?php echo $terms; ?></td>                                  
                    <td class="actions">&nbsp;
-                   <a class="left" href="?page=wpmpg&tab=cpt-terms&slug=<?php echo esc_attr($cpt->tax_slug)?>"   title="<?php _e('See Terms','wp-mosaic-page-generator'); ?>">See Terms</a>
-                   </td>
+                  <a class="left" href="?page=wpmpg&tab=cpt-taxo-terms&slug=<?php echo esc_attr($cpt->tax_slug)?>&taxonomy=<?php echo esc_attr($cpt_id)?>"   title="<?php _e('See Terms','wp-mosaic-page-generator'); ?>">See Terms</a>  <a href="#" class="wpmpg-int-delete-taxo right delete" acc-id="<?php echo esc_attr($cpt->tax_id)?>" title="<?php _e('Delete','wp-mosaic-page-generator'); ?>"><i class="fa fa-trash-o"></i></a> 
+                  
+                </td>
                </tr>              
                
                <?php

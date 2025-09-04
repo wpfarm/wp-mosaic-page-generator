@@ -56,7 +56,7 @@ $auxCPF = new WpMosaicCPT();
                    <td><?php echo $cpf_qty; ?></td>  
                    <td> <a class="left" href="?page=wpmpg&tab=cpt-taxo&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Taxonomies','wp-mosaic-page-generator'); ?>"><?php echo $taxo_qty; ?></a> </td>                 
                    <td>
-                   <a class="left" href="?page=wpmpg&tab=cpt-taxo&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('See Taxonomies','wp-mosaic-page-generator'); ?>">See Taxonomies</a>
+                   <a class="left" href="?page=wpmpg&tab=cpt-taxo&id=<?php echo esc_attr($cpt->cpt_unique_key)?>"   title="<?php _e('See Taxonomies','wp-mosaic-page-generator'); ?>">See Taxonomies</a>
                     <a class="left" href="?page=wpmpg&tab=cpt-cpf&id=<?php echo esc_attr($cpt->cpt_id)?>"   title="<?php _e('Fields','wp-mosaic-page-generator'); ?>">Edit Fields</a>                       
                        
                     <a class="right edit outline" href="?page=wpmpg&tab=cpt-edit&id=<?php echo esc_attr($cpt->cpt_id)?>" title="<?php _e('Edit','wp-mosaic-page-generator'); ?>">

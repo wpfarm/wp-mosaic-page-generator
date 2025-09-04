@@ -19,6 +19,25 @@ jQuery(document).ready(function($) {
         ms_build_links_array();
     });
 
+    $(document).on("click", ".wpmpg-int-delete-taxo", function(e) {
+        e.preventDefault();	 
+        var doIt = false;
+        var acc_id =  $(this).attr("acc-id"); 
+        doIt=confirm("Are you totally sure that you want to delete this taxonomy?");
+		if(doIt){                    
+            $.ajax({
+                type: 'POST',
+                url: ajaxurl,
+                data: {"action": "wpmpg_delete_taxonomy",
+                        "acc_id": acc_id},
+                success: function(data){	
+                    $("#acc-row-"+ acc_id).slideUp();
+                }
+            }); 
+        }
+        e.preventDefault();         
+    });
+
     $(document).on("click", ".wpmpg-int-delete-acc", function(e) {
         e.preventDefault();	 
         var doIt = false;
