@@ -4,6 +4,60 @@ class wpmpgCommon{
 	var $options ;	
 	public function __construct(){		
 		$this->options = get_option('wpmpg_options');	
+	}
+
+	/**
+	 * Debug logging function for development and QA
+	 * Only logs when WPMPG_DEBUG is true
+	 * 
+	 * @param string $message Log message
+	 * @param mixed $data Optional data to log
+	 * @param string $level Log level (INFO, WARNING, ERROR, SECURITY)
+	 */
+	public static function debug_log($message, $data = null, $level = 'INFO') {
+		if (defined('WPMPG_DEBUG') && WPMPG_DEBUG) {
+			$timestamp = current_time('mysql');
+			$log_entry = "[WPMPG-{$level}] [{$timestamp}] {$message}";
+			
+			if ($data !== null) {
+				$log_entry .= " | Data: " . print_r($data, true);
+			}
+			
+			error_log($log_entry);
+			
+			// Also log to custom file in dev mode
+			if (defined('WPMPG_DEV_MODE') && WPMPG_DEV_MODE) {
+				$upload_dir = wp_upload_dir();
+				$log_file = $upload_dir['basedir'] . '/wpmpg-debug.log';
+				error_log($log_entry . "\n", 3, $log_file);
+			}
+		}
+	}
+
+	/**
+	 * Security-specific logging
+	 */
+	public static function security_log($action, $data = null, $user_id = null) {
+		if (!$user_id) {
+			$user_id = get_current_user_id();
+		}
+		
+		$message = "SECURITY ACTION: {$action} | User ID: {$user_id}";
+		self::debug_log($message, $data, 'SECURITY');
+	}
+
+	/**
+	 * Performance logging for QA testing
+	 */
+	public static function performance_log($operation, $start_time, $memory_before = null) {
+		if (defined('WPMPG_DEBUG') && WPMPG_DEBUG) {
+			$execution_time = microtime(true) - $start_time;
+			$memory_after = memory_get_usage();
+			$memory_used = $memory_before ? $memory_after - $memory_before : 0;
+			
+			$message = "PERFORMANCE: {$operation} | Time: {$execution_time}s | Memory: " . size_format($memory_used);
+			self::debug_log($message, null, 'PERFORMANCE');
+		}
 	}	
 	function get_all_sytem_pages()	{
 	    if($this->wp_all_pages === false) {
