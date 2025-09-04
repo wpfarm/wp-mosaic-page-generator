@@ -6,6 +6,7 @@ use RankMath\Paper\Paper;
 use RankMath\Admin\Metabox\Screen;
 use RankMath\Schema\DB;
 
+#[AllowDynamicProperties]
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
 	public $allowed_html;
@@ -37,6 +38,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	const PREFIX = 'rank-math-';
 
 	public function __construct()	{		
+		
+		// Log plugin initialization for debugging
+		wpmpgCommon::debug_log("WPMPG Plugin initialized", [
+			'version' => '2.3.4',
+			'user_id' => get_current_user_id(),
+			'debug_mode' => defined('WPMPG_DEBUG') ? WPMPG_DEBUG : 'not_defined'
+		]);
 
 		// Hook the filter during class initialization
 		add_filter('rank_math/recalculate_scores_batch_size',array(&$this, 'set_batch_size'));
@@ -379,7 +387,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;		
 				
-		//$rand = $this->genRandomString(5);
+		$rand = $this->genRandomString(5);
 		$rand_name = "floor_plan_temp_".$rand."_".session_id()."_".time();
 		$rand_name = $real_name;		
 			
