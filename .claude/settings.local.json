@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\LENOVO P320\\Documents\\Direction Tools\\Mosaic\\wp-mosaic-page-generator/**)",
+      "Read(/C:\\Users\\LENOVO P320\\Documents\\Direction Tools\\Mosaic\\wp-mosaic-page-generator/**)",
+      "Read(/C:\\Users\\LENOVO P320\\Documents\\Direction Tools\\Mosaic\\wp-mosaic-page-generator\\classes/**)",
+      "Read(/C:\\Users\\LENOVO P320\\Documents\\Direction Tools\\Mosaic\\wp-mosaic-page-generator\\admin\\tabs/**)",
+      "Read(/C:\\Users\\LENOVO P320\\Documents\\Direction Tools\\Mosaic\\wp-mosaic-page-generator\\classes/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
