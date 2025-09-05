@@ -429,8 +429,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$pathInfo = pathinfo($parsedUrl['path']);
 		$real_name = $pathInfo['basename'];
 		$dir_name = $pathInfo['dirname'];
-		$ext = $pathInfo['extension'];
-		$ext=strtolower($ext);
+		$ext = $pathInfo['extension'] ?? '';
+		$ext = !empty($ext) ? strtolower($ext) : 'csv';
 
 		if (strpos($url, "https://docs.google.com/spreadsheets") !== false) {
 
@@ -467,8 +467,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$pathInfo = pathinfo($parsedUrl['path']);
 		
 		$real_name = $pathInfo['basename'];
-		$ext = $pathInfo['extension'];
-		$ext='csv';
+		$ext = $pathInfo['extension'] ?? 'csv';
+		$ext = 'csv'; // Force CSV for compatibility
 			
 		$upload_dir = wp_upload_dir(); 
 		$path_pics =   $upload_dir['basedir'];	
@@ -734,21 +734,21 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$cpt = $post_type;						
 
 					}else{ //image	
-							
-						$meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
 						
-						$meta_alternative_text= $meta_key.'_alternative_text';
-						$meta_title= $meta_key.'_title';
-						$meta_slug= $meta_key.'_slug';
-						$meta_description= $meta_key.'_description';
-
+						// Define meta field names for image attributes
+						$meta_alternative_text = $meta_key.'_alternative_text';
+						$meta_title = $meta_key.'_title';
+						$meta_slug = $meta_key.'_slug';
+						$meta_description = $meta_key.'_description';
+						
+						// Get values from CSV data with fallbacks
 						$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
-						$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
-						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
-						$meta_description = $rowsCombined[$count][$meta_description] ?? '';						
+						$meta_slug_value = $rowsCombined[$count][$meta_slug] ?? '';
+						$meta_title_value = $rowsCombined[$count][$meta_title] ?? '';
+						$meta_description_value = $rowsCombined[$count][$meta_description] ?? '';						
 		
-						$img_path = $this->download_from_url($val_import, $meta_slug, $post_id, $meta_key);
-						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
+						$img_path = $this->download_from_url($val_import, $meta_slug_value, $post_id, $meta_key);
+						$attach_id = $this->attach_image_to_project($img_path, $meta_title_value, $post_id, $user_id);
 
 						if($attach_id!=''){
 
@@ -759,9 +759,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
 							$my_image_meta = array(
 									'ID'		=> $attach_id,			
-									'post_title'	=> $meta_title,		
+									'post_title'	=> $meta_title_value,		
 									'post_excerpt'	=> $meta_text,		
-									'post_content'	=> $meta_description, 
+									'post_content'	=> $meta_description_value, 
 								);
 
 							// Set the image meta (e.g. Title, Excerpt, Content)

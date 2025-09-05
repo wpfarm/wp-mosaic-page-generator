@@ -4,51 +4,84 @@ use Elementor\Controls_Manager;
 use Elementor\Repeater;
 if ( ! defined( 'ABSPATH' ) ) exit; 
 
-function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
-    global $wpdb;	
-    $custom_fields = getAllCustomFieldsMosaic();
-    foreach ( $custom_fields as $field  ) {   
-        $meta_key = $field->cpf_field_name;
-        $title = $field->cpf_field_label;
-        $tag_class_name = 'Dynamic_Meta_Tag_' . sanitize_key( $meta_key );
-        if ( ! class_exists( $tag_class_name ) ) {
-            // Dynamically create a unique class for each meta field
-            eval( "
-                class $tag_class_name extends \Elementor\Core\DynamicTags\Tag {
-                    protected \$meta_key = '$meta_key';
-                    protected \$title = '$title';
+/**
+ * Base class for Mosaic dynamic meta tags
+ * Replaces dangerous eval() with secure class factory pattern
+ */
+class Mosaic_Dynamic_Meta_Tag extends Elementor\Core\DynamicTags\Tag {
+    protected $meta_key;
+    protected $field_title;
 
-                    public function get_name() {
-                        return 'mosaic_dynamic_meta_' . sanitize_key( \$this->meta_key );
-                    }
+    public function __construct( $meta_key, $title ) {
+        $this->meta_key = sanitize_key( $meta_key );
+        $this->field_title = sanitize_text_field( $title );
+        parent::__construct();
+    }
 
-                     public function get_group() {
-                        return 'mosaic_custom_group';
-                    }
+    public function get_name() {
+        return 'mosaic_dynamic_meta_' . $this->meta_key;
+    }
 
-                    public function get_title() {
-                        return \$this->title;
-                    }
+    public function get_group() {
+        return 'mosaic_custom_group';
+    }
 
-                    public function get_categories() {
-                        return [ \Elementor\Modules\DynamicTags\Module::TEXT_CATEGORY ];
-                    }
+    public function get_title() {
+        return $this->field_title;
+    }
 
-                    protected function render() {
-                        \$post_id = get_the_ID();
-                        \$value = get_post_meta( \$post_id, \$this->meta_key, true );
+    public function get_categories() {
+        return [ \Elementor\Modules\DynamicTags\Module::TEXT_CATEGORY ];
+    }
 
-                        if ( ! empty( \$value ) ) {
-                            echo  \$value;
-                        } else {
-                            //echo __( 'No meta value found', 'wp-mosaic-page-generator' );
-                        }
-                    }
-                }
-            " );
+    protected function render() {
+        $post_id = get_the_ID();
+        if ( ! $post_id ) {
+            return;
         }
-        // Register the dynamically created tag class integration with taxonomies
-        $dynamic_tags->register_tag( $tag_class_name );
+        
+        $value = get_post_meta( $post_id, $this->meta_key, true );
+        
+        if ( ! empty( $value ) ) {
+            echo wp_kses_post( $value );
+        }
+    }
+}
+
+function register_dynamic_meta_tags_mosaic( $dynamic_tags ) {
+    wpmpgCommon::security_log("Registering Elementor dynamic tags", [
+        'action' => 'elementor_tag_registration',
+        'user_id' => get_current_user_id()
+    ]);
+    
+    $custom_fields = getAllCustomFieldsMosaic();
+    
+    if ( ! is_array( $custom_fields ) ) {
+        wpmpgCommon::debug_log("No custom fields found for Elementor registration", null, 'WARNING');
+        return;
+    }
+    
+    foreach ( $custom_fields as $field ) {   
+        if ( ! isset( $field->cpf_field_name ) || ! isset( $field->cpf_field_label ) ) {
+            wpmpgCommon::debug_log("Invalid field data in Elementor registration", $field, 'WARNING');
+            continue;
+        }
+        
+        $meta_key = sanitize_key( $field->cpf_field_name );
+        $title = sanitize_text_field( $field->cpf_field_label );
+        
+        if ( empty( $meta_key ) || empty( $title ) ) {
+            continue;
+        }
+        
+        // Create secure tag instance instead of using eval()
+        $tag_instance = new Mosaic_Dynamic_Meta_Tag( $meta_key, $title );
+        $dynamic_tags->register_tag( $tag_instance );
+        
+        wpmpgCommon::debug_log("Registered Elementor dynamic tag", [
+            'meta_key' => $meta_key,
+            'title' => $title
+        ]);
     }
 }
 
