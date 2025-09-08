@@ -41,7 +41,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		
 		// Log plugin initialization for debugging
 		wpmpgCommon::debug_log("WPMPG Plugin initialized", [
-			'version' => '2.3.4',
+			'version' => '2.3.5',
 			'user_id' => get_current_user_id(),
 			'debug_mode' => defined('WPMPG_DEBUG') ? WPMPG_DEBUG : 'not_defined'
 		]);
