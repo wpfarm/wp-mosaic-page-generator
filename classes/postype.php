@@ -31,6 +31,25 @@ class  WpMosaicCPT extends wpmpgCommon {
 	function handle_update_cpf(){			
 		global $wpmpg, $wpdb;	
 		
+		// Security: Verify nonce and capabilities
+		if (!isset($_POST['wpmpg_nonce_check']) || !wp_verify_nonce($_POST['wpmpg_nonce_check'], 'update_settings')) {
+			wpmpgCommon::security_log("Invalid nonce in handle_update_cpf", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Security verification failed.','wp-mosaic-page-generator');
+			return;
+		}
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized handle_update_cpf attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Insufficient permissions.','wp-mosaic-page-generator');
+			return;
+		}
+		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please set a type.','wp-mosaic-page-generator');
 
@@ -63,6 +82,25 @@ class  WpMosaicCPT extends wpmpgCommon {
 	function handle_creation_cpf(){	
 		global $wpmpg, $wpdb;		
 		
+		// Security: Verify nonce and capabilities
+		if (!isset($_POST['wpmpg_nonce_check']) || !wp_verify_nonce($_POST['wpmpg_nonce_check'], 'update_settings')) {
+			wpmpgCommon::security_log("Invalid nonce in handle_creation_cpf", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Security verification failed.','wp-mosaic-page-generator');
+			return;
+		}
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized handle_creation_cpf attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Insufficient permissions.','wp-mosaic-page-generator');
+			return;
+		}
+		
 		if(!isset($_POST['cpf_field_type']) || $_POST['cpf_field_type']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please set a type.','wp-mosaic-page-generator');
 		}elseif(!isset($_POST['cpf_cpt_id']) || $_POST['cpf_cpt_id']==''){			
@@ -88,6 +126,26 @@ class  WpMosaicCPT extends wpmpgCommon {
 
     function handle_creation(){		
 		global $wpmpg, $wpdb;	
+		
+		// Security: Verify nonce and capabilities
+		if (!isset($_POST['wpmpg_nonce_check']) || !wp_verify_nonce($_POST['wpmpg_nonce_check'], 'update_settings')) {
+			wpmpgCommon::security_log("Invalid nonce in handle_creation", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Security verification failed.','wp-mosaic-page-generator');
+			return;
+		}
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized handle_creation attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Insufficient permissions.','wp-mosaic-page-generator');
+			return;
+		}
+		
 		if(!isset($_POST['cpt_name']) || $_POST['cpt_name']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please input Name.','wp-mosaic-page-generator');
 
@@ -166,6 +224,25 @@ class  WpMosaicCPT extends wpmpgCommon {
 
 	function handle_edition(){		
 		global $wpmpg, $wpdb;	
+		
+		// Security: Verify nonce and capabilities
+		if (!isset($_POST['wpmpg_nonce_check']) || !wp_verify_nonce($_POST['wpmpg_nonce_check'], 'update_settings')) {
+			wpmpgCommon::security_log("Invalid nonce in handle_edition", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Security verification failed.','wp-mosaic-page-generator');
+			return;
+		}
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized handle_edition attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			$this->errors[] = __('<strong>ERROR:</strong> Insufficient permissions.','wp-mosaic-page-generator');
+			return;
+		}
 		
 		if(!isset($_POST['cpt_name']) || $_POST['cpt_name']==''){
 			$this->errors[] = __('<strong>ERROR:</strong> Please input Name.','wp-mosaic-page-generator');

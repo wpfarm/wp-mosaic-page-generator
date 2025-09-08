@@ -1,0 +1,44 @@
+# Claude Code files
+CLAUDE.md
+.claude/
+
+# Project documentation (for future Claude instances)
+CHANGELOG.md
+PROJECT_STATUS.md
+
+# Development and QA testing files
+/dev-testing/
+wpmpg-debug.log
+*.log
+
+# WordPress uploads during testing  
+/wp-content/uploads/mosaicpagegenerator/
+/wp-content/uploads/wpmpg-debug.log
+
+# Development configuration
+wp-config-local.php
+.env.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation and notes (development only)
+NOTES.md
+TODO.md
+ROADMAP.md
+
+# Plugin zip files
+*.zip

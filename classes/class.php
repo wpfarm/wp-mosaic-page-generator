@@ -6,6 +6,7 @@ use RankMath\Paper\Paper;
 use RankMath\Admin\Metabox\Screen;
 use RankMath\Schema\DB;
 
+#[AllowDynamicProperties]
 class WpMosaicPageGenerator extends wpmpgCommon {	
 	var $wp_all_pages = false;
 	public $allowed_html;
@@ -37,6 +38,13 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	const PREFIX = 'rank-math-';
 
 	public function __construct()	{		
+		
+		// Log plugin initialization for debugging
+		wpmpgCommon::debug_log("WPMPG Plugin initialized", [
+			'version' => '2.3.5',
+			'user_id' => get_current_user_id(),
+			'debug_mode' => defined('WPMPG_DEBUG') ? WPMPG_DEBUG : 'not_defined'
+		]);
 
 		// Hook the filter during class initialization
 		add_filter('rank_math/recalculate_scores_batch_size',array(&$this, 'set_batch_size'));
@@ -243,7 +251,15 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		wp_enqueue_script('wpmpg_front_uploader'); 
 		wp_register_script( 'wpmpg_admin', wpmpg_url.'admin/scripts/admin.js', array( 
 		 'jquery','jquery-ui-core', 'jquery-ui-progressbar'), $this->mVersion, true );
-		wp_enqueue_script( 'wpmpg_admin' );		  
+		wp_enqueue_script( 'wpmpg_admin' );
+		
+		// Localize script with nonces for AJAX security
+		wp_localize_script( 'wpmpg_admin', 'wpmpg_ajax', array(
+			'download_nonce' => wp_create_nonce('wpmpg_download_url'),
+			'import_nonce' => wp_create_nonce('wpmpg_import_data'),
+			'delete_nonce' => wp_create_nonce('wpmpg_delete_item'),
+			'analysis_nonce' => wp_create_nonce('wpmpg_analysis')
+		));		  
 	}      
 	
 	function update_cpt_details( $post_id ){
@@ -379,7 +395,7 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	
 		$upload_temp_folder = WPMPG_UPLOAD_FOLDER;		
 				
-		//$rand = $this->genRandomString(5);
+		$rand = $this->genRandomString(5);
 		$rand_name = "floor_plan_temp_".$rand."_".session_id()."_".time();
 		$rand_name = $real_name;		
 			
@@ -413,8 +429,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$pathInfo = pathinfo($parsedUrl['path']);
 		$real_name = $pathInfo['basename'];
 		$dir_name = $pathInfo['dirname'];
-		$ext = $pathInfo['extension'];
-		$ext=strtolower($ext);
+		$ext = $pathInfo['extension'] ?? '';
+		$ext = !empty($ext) ? strtolower($ext) : 'csv';
 
 		if (strpos($url, "https://docs.google.com/spreadsheets") !== false) {
 
@@ -426,8 +442,23 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	function download_file_from_url(){
+		
+		// Security: Check nonce and capabilities
+		check_ajax_referer('wpmpg_download_url', '_ajax_nonce');
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized download_file_from_url attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			wp_die(__('Insufficient permissions.', 'wp-mosaic-page-generator'));
+		}
+		
+		wpmpgCommon::security_log("File download from URL initiated", [
+			'user_id' => get_current_user_id()
+		]);
 
-		$url = $_POST['link_to_download'] ?? '';
+		$url = sanitize_url($_POST['link_to_download'] ?? '');
 		$url = $this->analize_url_to_download($url);
 						
 		$image = file_get_contents($url);			
@@ -436,8 +467,8 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 		$pathInfo = pathinfo($parsedUrl['path']);
 		
 		$real_name = $pathInfo['basename'];
-		$ext = $pathInfo['extension'];
-		$ext='csv';
+		$ext = $pathInfo['extension'] ?? 'csv';
+		$ext = 'csv'; // Force CSV for compatibility
 			
 		$upload_dir = wp_upload_dir(); 
 		$path_pics =   $upload_dir['basedir'];	
@@ -486,9 +517,30 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function delete_cpf(){
+		
+		// Security: Check nonce and capabilities
+		check_ajax_referer('wpmpg_delete_item', '_ajax_nonce');
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized delete_cpf attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			wp_die(__('Insufficient permissions.', 'wp-mosaic-page-generator'));
+		}
+		
 		global $wpdb;
-		$cpf = $_POST['acc_id'] ?? '';
-		if($cpf=='') echo 'error';
+		$cpf = absint($_POST['acc_id'] ?? '');
+		if($cpf <= 0) {
+			wpmpgCommon::debug_log("Invalid CPF ID for deletion", ['cpf_id' => $_POST['acc_id'] ?? ''], 'ERROR');
+			echo 'error';
+			die();
+		}
+		
+		wpmpgCommon::security_log("CPF deletion initiated", [
+			'cpf_id' => $cpf,
+			'user_id' => get_current_user_id()
+		]);
 		$wpdb->delete( $wpdb->prefix . 'cpt', [ 'cpt_id'=>$cpf ], [ '%d' ] );
 		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_cpt_id'=>$cpf ], [ '%d' ] );
 		echo 'deleted: '. $cpf;
@@ -496,9 +548,30 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function delete_cpf_value(){
+		
+		// Security: Check nonce and capabilities
+		check_ajax_referer('wpmpg_delete_item', '_ajax_nonce');
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized delete_cpf_value attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			wp_die(__('Insufficient permissions.', 'wp-mosaic-page-generator'));
+		}
+		
 		global $wpdb;
-		$cpf = $_POST['acc_id'] ?? '';
-		if($cpf=='') echo 'error';
+		$cpf = absint($_POST['acc_id'] ?? '');
+		if($cpf <= 0) {
+			wpmpgCommon::debug_log("Invalid CPF value ID for deletion", ['cpf_id' => $_POST['acc_id'] ?? ''], 'ERROR');
+			echo 'error';
+			die();
+		}
+		
+		wpmpgCommon::security_log("CPF value deletion initiated", [
+			'cpf_value_id' => $cpf,
+			'user_id' => get_current_user_id()
+		]);
 		$wpdb->delete( $wpdb->prefix . 'cpt_fields', [ 'cpf_id'=>$cpf ], [ '%d' ] );
 		echo 'deleted: '. $cpf;
 		die();
@@ -511,8 +584,24 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	public function start_import_ajax(){
+		
+		// Security: Check nonce and capabilities
+		check_ajax_referer('wpmpg_import_data', '_ajax_nonce');
+		
+		if (!current_user_can('manage_options')) {
+			wpmpgCommon::security_log("Unauthorized start_import_ajax attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+			]);
+			wp_die(__('Insufficient permissions.', 'wp-mosaic-page-generator'));
+		}
+		
+		wpmpgCommon::security_log("Import process initiated", [
+			'user_id' => get_current_user_id()
+		]);
+		
 		global $wpdb;		
-		$file = $_POST['file_uploaded'] ?? '';		
+		$file = sanitize_file_name($_POST['file_uploaded'] ?? '');		
 		$this->import_from_url($file);	
 		$postIDArray = array();
 		$headers = $this->tblHeaders;
@@ -645,21 +734,21 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 						$cpt = $post_type;						
 
 					}else{ //image	
-							
-						$meta_alternative_text = $rowsCombined[$count][$meta_alternative_text] ?? ''; // Already defined above
 						
-						$meta_alternative_text= $meta_key.'_alternative_text';
-						$meta_title= $meta_key.'_title';
-						$meta_slug= $meta_key.'_slug';
-						$meta_description= $meta_key.'_description';
-
+						// Define meta field names for image attributes
+						$meta_alternative_text = $meta_key.'_alternative_text';
+						$meta_title = $meta_key.'_title';
+						$meta_slug = $meta_key.'_slug';
+						$meta_description = $meta_key.'_description';
+						
+						// Get values from CSV data with fallbacks
 						$meta_text = $rowsCombined[$count][$meta_alternative_text] ?? '';
-						$meta_slug = $rowsCombined[$count][$meta_slug] ?? '';
-						$meta_title = $rowsCombined[$count][$meta_title] ?? '';
-						$meta_description = $rowsCombined[$count][$meta_description] ?? '';						
+						$meta_slug_value = $rowsCombined[$count][$meta_slug] ?? '';
+						$meta_title_value = $rowsCombined[$count][$meta_title] ?? '';
+						$meta_description_value = $rowsCombined[$count][$meta_description] ?? '';						
 		
-						$img_path = $this->download_from_url($val_import, $meta_slug, $post_id, $meta_key);
-						$attach_id = $this->attach_image_to_project($img_path, $meta_title, $post_id, $user_id);
+						$img_path = $this->download_from_url($val_import, $meta_slug_value, $post_id, $meta_key);
+						$attach_id = $this->attach_image_to_project($img_path, $meta_title_value, $post_id, $user_id);
 
 						if($attach_id!=''){
 
@@ -670,9 +759,9 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 							update_post_meta( $attach_id, '_wp_attachment_image_alt', $meta_text );
 							$my_image_meta = array(
 									'ID'		=> $attach_id,			
-									'post_title'	=> $meta_title,		
+									'post_title'	=> $meta_title_value,		
 									'post_excerpt'	=> $meta_text,		
-									'post_content'	=> $meta_description, 
+									'post_content'	=> $meta_description_value, 
 								);
 
 							// Set the image meta (e.g. Title, Excerpt, Content)
@@ -1094,11 +1183,30 @@ class WpMosaicPageGenerator extends wpmpgCommon {
 	}
 
 	function get_post_data_for_analysis() {
+		
+		// Security: Check nonce and capabilities
+		check_ajax_referer('wpmpg_analysis', '_ajax_nonce');
+		
+		if (!current_user_can('edit_posts')) {
+			wpmpgCommon::security_log("Unauthorized get_post_data_for_analysis attempt", [
+				'user_id' => get_current_user_id(),
+				'user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+				'post_id' => $_POST['post_id'] ?? 'none'
+			]);
+			wp_send_json_error(['message' => 'Insufficient permissions']);
+		}
+		
 		if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {
+			wpmpgCommon::debug_log("Invalid post ID in analysis request", ['post_id' => $_POST['post_id'] ?? 'none'], 'ERROR');
 			wp_send_json_error(['message' => 'Invalid post ID']);
 		}
 	
 		$post_id = intval($_POST['post_id']);
+		
+		wpmpgCommon::security_log("Post analysis data requested", [
+			'post_id' => $post_id,
+			'user_id' => get_current_user_id()
+		]);
 		$post = get_post($post_id);
 	
 		if (!$post) {

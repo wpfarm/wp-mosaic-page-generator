@@ -48,6 +48,7 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 url: ajaxurl,
                 data: {"action": "wpmpg_delete_cpf",
+                        "_ajax_nonce": wpmpg_ajax.delete_nonce,
                         "acc_id": acc_id},
                 success: function(data){	
                     $("#acc-row-"+ acc_id).slideUp();
@@ -67,6 +68,7 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 url: ajaxurl,
                 data: {"action": "wpmpg_delete_cpf_value",
+                        "_ajax_nonce": wpmpg_ajax.delete_nonce,
                         "acc_id": acc_id},
                 success: function(data){	
                     $("#acc-row-"+ acc_id).slideUp();
@@ -81,6 +83,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             url: ajaxurl,
             data: {"action": "wpmpg_download_url_file", 
+                "_ajax_nonce": wpmpg_ajax.download_nonce,
                 "link_to_download": $("#file_url").val()
             },                       
             success: function(data){
@@ -134,7 +137,8 @@ function ms_build_links_array (){
         $.ajax({
             type: 'POST',
             url: ajaxurl,
-            data: {"action": "wpmpg_start_process", 
+            data: {"action": "wpmpg_start_process",
+                    "_ajax_nonce": wpmpg_ajax.import_nonce, 
                     "file_uploaded": $("#file_uploaded").val(),                  
                     "last": $("#last_row").val(),
                     "batch":$("#batch").val(),
@@ -177,6 +181,7 @@ function analyzePostWithEditor(postId, callback) {
         type: 'POST',
         data: {
             action: 'wpmpg_start_score_rebuild', // Custom PHP function
+            _ajax_nonce: wpmpg_ajax.analysis_nonce,
             post_id: postId,
         },
         success: function (response) {
